@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+Icon?
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# Xcode and local IDE state
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Build products
+dist/
+*.app/
+*.dSYM/
+
+# Local app data and backups
+backups/
+*.backup
+
+# Local automation / browser artifacts
+.playwright-mcp/
+
+# Prototype/reference artifacts not needed by the app source
+remotion-habits-demo/
+IMG_0175.PNG
+IMG_0176.JPG
+IMG_0177.JPG
+modal-form-ui-dribbble.png
+radix-dialog-reference.png
+linear-create-issue-reference.png
+
+# Secrets / credentials
+.env
+.env.*
+.netrc
