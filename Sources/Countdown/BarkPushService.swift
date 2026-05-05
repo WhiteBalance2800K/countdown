@@ -1,8 +1,18 @@
 import Foundation
 
 enum BarkPushService {
-    static func send(pushAddress: String, itemName: String, daysUntilExpiry: Int) async throws {
-        guard let url = pushURL(pushAddress: pushAddress, itemName: itemName, daysUntilExpiry: daysUntilExpiry) else {
+    static func send(
+        pushAddress: String,
+        itemName: String,
+        daysUntilExpiry: Int,
+        language: AppLanguage = .simplifiedChinese
+    ) async throws {
+        guard let url = pushURL(
+            pushAddress: pushAddress,
+            itemName: itemName,
+            daysUntilExpiry: daysUntilExpiry,
+            language: language
+        ) else {
             throw BarkPushError.invalidAddress
         }
 
@@ -17,18 +27,18 @@ enum BarkPushService {
         }
     }
 
-    private static func pushURL(pushAddress: String, itemName: String, daysUntilExpiry: Int) -> URL? {
+    private static func pushURL(
+        pushAddress: String,
+        itemName: String,
+        daysUntilExpiry: Int,
+        language: AppLanguage
+    ) -> URL? {
         let trimmed = pushAddress.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         guard var base = URL(string: trimmed) else { return nil }
 
         let title = "Countdown"
-        let body: String
-        if daysUntilExpiry == 0 {
-            body = "\(itemName) 今天到期"
-        } else {
-            body = "\(itemName) \(daysUntilExpiry) 天后到期"
-        }
+        let body = L10n.barkBody(itemName: itemName, daysUntilExpiry: daysUntilExpiry, language: language)
 
         base.appendPathComponent(title)
         base.appendPathComponent(body)

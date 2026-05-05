@@ -38,6 +38,7 @@ struct ItemEditorView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
 
     @State private var name: String
     @State private var inputMode: ExpiryInputMode = .remainingDays
@@ -47,6 +48,10 @@ struct ItemEditorView: View {
 
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
     }
 
     private var finalExpiryDate: Date {
@@ -141,7 +146,7 @@ struct ItemEditorView: View {
 
     private var titleField: some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text("项目名称")
+            Text(L10n.text("itemName", language))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
 
@@ -150,7 +155,7 @@ struct ItemEditorView: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(RadixPalette.accentSolid(colorScheme))
 
-                TextField("例如：会员续费、证件到期", text: $name)
+                TextField(L10n.text("itemPlaceholder", language), text: $name)
                     .font(.system(size: 15, weight: .regular))
                     .foregroundStyle(RadixPalette.text(colorScheme))
                     .textFieldStyle(.plain)
@@ -174,7 +179,7 @@ struct ItemEditorView: View {
                     HStack(spacing: 6) {
                         Image(systemName: option.iconName)
                             .font(.system(size: 12, weight: .semibold))
-                        Text(option.label)
+                        Text(inputModeLabel(option))
                             .font(.system(size: 12, weight: .medium))
                     }
                     .frame(maxWidth: .infinity)
@@ -195,14 +200,14 @@ struct ItemEditorView: View {
 
     private var remainingDaysEditor: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("剩余天数")
+            Text(L10n.text("remainingDays", language))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
 
             HStack(spacing: 10) {
                 dayAdjustButton(systemName: "minus", action: { remainingDays = clampDays(remainingDays - 1) })
 
-                TextField("天数", value: $remainingDays, format: .number)
+                TextField(L10n.text("daysMode", language), value: $remainingDays, format: .number)
                     .font(.system(size: 30, weight: .semibold))
                     .foregroundStyle(RadixPalette.text(colorScheme))
                     .multilineTextAlignment(.center)
@@ -223,7 +228,7 @@ struct ItemEditorView: View {
 
     private var dateEditor: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("到期日期")
+            Text(L10n.text("expiryDate", language))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
 
@@ -249,14 +254,14 @@ struct ItemEditorView: View {
         HStack(spacing: 10) {
             previewPill(
                 iconName: "calendar",
-                title: "到期",
-                value: DateFormatters.shortDate.string(from: finalExpiryDate)
+                title: L10n.text("due", language),
+                value: DateFormatters.shortDateString(from: finalExpiryDate, language: language)
             )
 
             previewPill(
                 iconName: "clock",
-                title: "剩余",
-                value: previewDays <= 0 ? "今天" : "\(previewDays) 天"
+                title: L10n.text("remaining", language),
+                value: previewDays <= 0 ? L10n.text("today", language) : L10n.daysValue(previewDays, language)
             )
         }
     }
@@ -290,14 +295,14 @@ struct ItemEditorView: View {
 
     private var footer: some View {
         HStack(spacing: 10) {
-            Button("取消") {
+            Button(L10n.text("cancel", language)) {
                 cancel()
             }
             .buttonStyle(SecondaryDialogButtonStyle(colorScheme: colorScheme))
 
             Spacer()
 
-            Button(mode == .add ? "添加" : "保存") {
+            Button(mode == .add ? L10n.text("add", language) : L10n.text("save", language)) {
                 save()
             }
             .buttonStyle(PrimaryDialogButtonStyle(colorScheme: colorScheme))
@@ -336,6 +341,15 @@ struct ItemEditorView: View {
                 .frame(width: 34, height: 34)
         }
         .buttonStyle(QuietIconButtonStyle(colorScheme: colorScheme))
+    }
+
+    private func inputModeLabel(_ mode: ExpiryInputMode) -> String {
+        switch mode {
+        case .remainingDays:
+            return L10n.text("daysMode", language)
+        case .date:
+            return L10n.text("dateMode", language)
+        }
     }
 
     private func cancel() {

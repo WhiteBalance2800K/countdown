@@ -1,12 +1,18 @@
 import SwiftUI
 
 struct ItemCardView: View {
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
+
     let item: CountdownItem
     let now: Date
     let onEdit: () -> Void
     let onDelete: () -> Void
 
     private var remainingDays: Int { item.remainingDays(on: now) }
+
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
+    }
 
     private var ringColor: Color {
         let d = remainingDays
@@ -30,7 +36,7 @@ struct ItemCardView: View {
                     VStack(spacing: 2) {
                         Text("\(abs(remainingDays))")
                             .font(.system(size: 24, weight: .semibold, design: .rounded))
-                        Text(remainingDays < 0 ? "已过期" : "天")
+                        Text(remainingDays < 0 ? L10n.text("due", language) : L10n.text("daysMode", language))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
@@ -43,7 +49,7 @@ struct ItemCardView: View {
                         .foregroundStyle(.primary)
                         .lineLimit(2)
 
-                    Text("到期: \(DateFormatters.shortDate.string(from: item.expiryDate))")
+                    Text("\(L10n.text("due", language)): \(DateFormatters.shortDateString(from: item.expiryDate, language: language))")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }
@@ -64,8 +70,8 @@ struct ItemCardView: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("编辑") { onEdit() }
-            Button("删除", role: .destructive) { onDelete() }
+            Button(L10n.text("edit", language)) { onEdit() }
+            Button(L10n.text("delete", language), role: .destructive) { onDelete() }
         }
     }
 }

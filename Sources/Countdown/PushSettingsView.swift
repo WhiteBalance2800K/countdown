@@ -8,8 +8,13 @@ struct PushSettingsView: View {
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
     @AppStorage("pushSevenDaysEnabled") private var pushSevenDaysEnabled: Bool = true
     @AppStorage("pushDueDayEnabled") private var pushDueDayEnabled: Bool = true
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
 
     @State private var testState: TestState = .idle
+
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
+    }
 
     var body: some View {
         ZStack {
@@ -20,6 +25,7 @@ struct PushSettingsView: View {
                 header
 
                 VStack(spacing: 14) {
+                    languageSection
                     toggleRow
                     addressField
                     timingSection
@@ -55,10 +61,10 @@ struct PushSettingsView: View {
             .frame(width: 38, height: 38)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("设置")
+                Text(L10n.text("settings", language))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(RadixPalette.text(colorScheme))
-                Text("Bark 到期推送")
+                Text(L10n.text("pushSubtitle", language))
                     .font(.system(size: 12))
                     .foregroundStyle(RadixPalette.mutedText(colorScheme))
             }
@@ -89,10 +95,10 @@ struct PushSettingsView: View {
     private var toggleRow: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("启用 Bark 推送")
+                Text(L10n.text("enableBark", language))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(RadixPalette.text(colorScheme))
-                Text("应用运行时检查到期项目")
+                Text(L10n.text("runtimeCheck", language))
                     .font(.system(size: 11))
                     .foregroundStyle(RadixPalette.faintText(colorScheme))
             }
@@ -107,9 +113,35 @@ struct PushSettingsView: View {
         .background(settingsSurface)
     }
 
+    private var languageSection: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.text("language", language))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(RadixPalette.text(colorScheme))
+                Text(language.nativeName)
+                    .font(.system(size: 11))
+                    .foregroundStyle(RadixPalette.faintText(colorScheme))
+            }
+
+            Spacer()
+
+            Picker("", selection: $appLanguageRaw) {
+                ForEach(AppLanguage.allCases) { option in
+                    Text(option.nativeName).tag(option.rawValue)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 158)
+        }
+        .padding(12)
+        .background(settingsSurface)
+    }
+
     private var addressField: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Bark 推送地址")
+            Text(L10n.text("barkAddress", language))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
 
@@ -118,7 +150,7 @@ struct PushSettingsView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(RadixPalette.accentSolid(colorScheme))
 
-                TextField("https://api.day.app/你的Key", text: $barkPushAddress)
+                TextField(L10n.text("barkAddressPlaceholder", language), text: $barkPushAddress)
                     .font(.system(size: 13))
                     .textFieldStyle(.plain)
                     .lineLimit(1)
@@ -128,7 +160,7 @@ struct PushSettingsView: View {
             .background(fieldBackground)
             .overlay(fieldBorder)
 
-            Text("填写 Bark App 里复制的基础地址，格式如 https://api.day.app/你的Key")
+            Text(L10n.text("barkAddressHelp", language))
                 .font(.system(size: 10))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
                 .lineLimit(2)
@@ -137,20 +169,20 @@ struct PushSettingsView: View {
 
     private var timingSection: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text("推送时间")
+            Text(L10n.text("pushTiming", language))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
 
             VStack(spacing: 8) {
                 SettingsCheckboxRow(
-                    title: "到期前 7 天",
-                    subtitle: "剩余 7 天时推送项目名称",
+                    title: L10n.text("sevenDaysBefore", language),
+                    subtitle: L10n.text("sevenDaysSubtitle", language),
                     isOn: $pushSevenDaysEnabled
                 )
 
                 SettingsCheckboxRow(
-                    title: "到期当天",
-                    subtitle: "剩余 0 天时推送项目名称",
+                    title: L10n.text("dueToday", language),
+                    subtitle: L10n.text("dueTodaySubtitle", language),
                     isOn: $pushDueDayEnabled
                 )
             }
@@ -162,13 +194,13 @@ struct PushSettingsView: View {
             Button {
                 sendTestPush()
             } label: {
-                Label("测试推送", systemImage: "paperplane.fill")
+                Label(L10n.text("testPush", language), systemImage: "paperplane.fill")
                     .font(.system(size: 12, weight: .semibold))
             }
             .buttonStyle(SettingsPrimaryButtonStyle(colorScheme: colorScheme))
             .disabled(!canSendTest)
 
-            Text(testState.message)
+            Text(testState.message(language))
                 .font(.system(size: 11))
                 .foregroundStyle(testState.color(colorScheme))
                 .lineLimit(1)
@@ -179,14 +211,14 @@ struct PushSettingsView: View {
 
     private var footer: some View {
         HStack {
-            Text("推送记录会去重，同一项目同一到期日不会重复发送。")
+            Text(L10n.text("dedupeHint", language))
                 .font(.system(size: 10))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
                 .lineLimit(2)
 
             Spacer()
 
-            Button("完成") {
+            Button(L10n.text("done", language)) {
                 dismiss()
             }
             .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
@@ -223,10 +255,16 @@ struct PushSettingsView: View {
     private func sendTestPush() {
         testState = .sending
         let address = barkPushAddress
+        let currentLanguage = language
 
         Task {
             do {
-                try await BarkPushService.send(pushAddress: address, itemName: "测试项目", daysUntilExpiry: 7)
+                try await BarkPushService.send(
+                    pushAddress: address,
+                    itemName: L10n.text("testItem", currentLanguage),
+                    daysUntilExpiry: 7,
+                    language: currentLanguage
+                )
                 await MainActor.run {
                     testState = .success
                 }
@@ -272,12 +310,12 @@ private enum TestState {
     case success
     case failed
 
-    var message: String {
+    func message(_ language: AppLanguage) -> String {
         switch self {
-        case .idle: return "发送一条测试消息"
-        case .sending: return "发送中..."
-        case .success: return "已发送"
-        case .failed: return "发送失败，请检查地址"
+        case .idle: return L10n.text("testIdle", language)
+        case .sending: return L10n.text("testSending", language)
+        case .success: return L10n.text("testSuccess", language)
+        case .failed: return L10n.text("testFailed", language)
         }
     }
 

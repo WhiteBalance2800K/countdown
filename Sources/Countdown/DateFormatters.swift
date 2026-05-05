@@ -10,4 +10,23 @@ enum DateFormatters {
         f.dateFormat = "yyyy年M月d日"
         return f
     }()
+
+    static func shortDateString(from date: Date, language: AppLanguage) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: language.localeIdentifier)
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = .current
+
+        switch language {
+        case .simplifiedChinese:
+            formatter.dateFormat = "yyyy年M月d日"
+        case .japanese:
+            formatter.dateFormat = "yyyy年M月d日"
+        default:
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+        }
+
+        return formatter.string(from: date)
+    }
 }

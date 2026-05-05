@@ -9,6 +9,7 @@ struct ContentView: View {
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
     @AppStorage("pushSevenDaysEnabled") private var pushSevenDaysEnabled: Bool = true
     @AppStorage("pushDueDayEnabled") private var pushDueDayEnabled: Bool = true
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
 
     @State private var now = Date()
     @State private var isAdding = false
@@ -26,6 +27,10 @@ struct ContentView: View {
 
     private var displayItems: [CountdownItem] {
         store.items
+    }
+
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
     }
 
     var body: some View {
@@ -154,7 +159,12 @@ struct ContentView: View {
                 guard !sentKeys.contains(key) else { continue }
 
                 do {
-                    try await BarkPushService.send(pushAddress: address, itemName: item.name, daysUntilExpiry: days)
+                    try await BarkPushService.send(
+                        pushAddress: address,
+                        itemName: item.name,
+                        daysUntilExpiry: days,
+                        language: language
+                    )
                     sentKeys.insert(key)
                     UserDefaults.standard.set(Array(sentKeys).sorted(), forKey: Self.sentReminderDefaultsKey)
                 } catch {

@@ -137,6 +137,7 @@ struct SoftDashboardView: View {
 
 private struct SoftMetricCard: View {
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
 
     let item: CountdownItem
     let now: Date
@@ -149,6 +150,10 @@ private struct SoftMetricCard: View {
 
     private var remainingDays: Int {
         item.remainingDays(on: now)
+    }
+
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
     }
 
     private var urgency: UrgencyBand {
@@ -224,7 +229,7 @@ private struct SoftMetricCard: View {
                     .animation(.easeOut(duration: 0.18), value: isHovering)
                 }
 
-                Text(DateFormatters.shortDate.string(from: item.expiryDate))
+                Text(DateFormatters.shortDateString(from: item.expiryDate, language: language))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(secondaryText)
                     .padding(.top, 8)
@@ -246,7 +251,7 @@ private struct SoftMetricCard: View {
                             .frame(width: 22, height: 22)
                     }
                     .buttonStyle(.plain)
-                    .help("编辑")
+                    .help(L10n.text("edit", language))
 
                     Button(role: .destructive) {
                         onDelete()
@@ -255,7 +260,7 @@ private struct SoftMetricCard: View {
                             .frame(width: 22, height: 22)
                     }
                     .buttonStyle(.plain)
-                    .help("删除")
+                    .help(L10n.text("delete", language))
                 }
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(secondaryText)
@@ -378,6 +383,7 @@ private struct SoftMetricCard: View {
 
 private struct SoftBottomBar: View {
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
 
     let sortAscending: Bool
     let isManualOrder: Bool
@@ -386,25 +392,29 @@ private struct SoftBottomBar: View {
     let onAdd: () -> Void
     let onSettings: () -> Void
 
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             HStack(spacing: 4) {
                 BottomBarButton(
-                    title: "卡片",
+                    title: L10n.text("cards", language),
                     systemImage: "square.grid.2x2.fill",
                     isSelected: true,
                     action: {}
                 )
 
                 BottomBarButton(
-                    title: isManualOrder ? "完成" : "调整",
+                    title: isManualOrder ? L10n.text("done", language) : L10n.text("adjust", language),
                     systemImage: isManualOrder ? "checkmark" : "line.3.horizontal",
                     isSelected: isManualOrder,
                     action: onToggleMode
                 )
 
                 BottomBarButton(
-                    title: sortAscending ? "临近" : "较远",
+                    title: sortAscending ? L10n.text("near", language) : L10n.text("far", language),
                     systemImage: sortAscending ? "arrow.down" : "arrow.up",
                     isSelected: false,
                     action: onToggleSort
@@ -413,7 +423,7 @@ private struct SoftBottomBar: View {
                 .opacity(isManualOrder ? 0.42 : 1)
 
                 BottomBarButton(
-                    title: "设置",
+                    title: L10n.text("settings", language),
                     systemImage: "gearshape.fill",
                     isSelected: false,
                     action: onSettings
@@ -440,7 +450,7 @@ private struct SoftBottomBar: View {
                     )
             }
             .buttonStyle(.plain)
-            .help("新增")
+            .help(L10n.text("addHelp", language))
             .keyboardShortcut("n", modifiers: [.command])
         }
     }
@@ -531,6 +541,11 @@ struct SoftBackground: View {
 
 private struct EmptySoftDashboardView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
+
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -538,11 +553,11 @@ private struct EmptySoftDashboardView: View {
                 .font(.system(size: 40, weight: .semibold))
                 .foregroundStyle(RadixPalette.accentSolid(colorScheme))
 
-            Text("No items yet")
+            Text(L10n.text("noItems", language))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(RadixPalette.text(colorScheme))
 
-            Text("Use the plus button to add your first expiry date.")
+            Text(L10n.text("emptyHint", language))
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(RadixPalette.mutedText(colorScheme))
         }
