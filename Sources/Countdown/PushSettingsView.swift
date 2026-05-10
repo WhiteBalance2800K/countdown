@@ -1,3 +1,4 @@
+import ServiceManagement
 import SwiftUI
 
 struct PushSettingsView: View {
@@ -9,8 +10,10 @@ struct PushSettingsView: View {
     @AppStorage("pushSevenDaysEnabled") private var pushSevenDaysEnabled: Bool = true
     @AppStorage("pushDueDayEnabled") private var pushDueDayEnabled: Bool = true
     @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
+    @AppStorage("launchAtLoginEnabled") private var launchAtLoginEnabled: Bool = false
 
     @State private var testState: TestState = .idle
+    @State private var launchAtLoginError = false
 
     private var language: AppLanguage {
         AppLanguage.current(from: appLanguageRaw)
@@ -26,6 +29,7 @@ struct PushSettingsView: View {
 
                 VStack(spacing: 14) {
                     languageSection
+                    launchAtLoginSection
                     toggleRow
                     addressField
                     timingSection
@@ -47,6 +51,9 @@ struct PushSettingsView: View {
             .padding(18)
         }
         .frame(width: 430)
+        .onAppear {
+            syncLaunchAtLoginStatus()
+        }
     }
 
     private var header: some View {
@@ -106,6 +113,27 @@ struct PushSettingsView: View {
             Spacer()
 
             Toggle("", isOn: $pushEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+        }
+        .padding(12)
+        .background(settingsSurface)
+    }
+
+    private var launchAtLoginSection: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.text("launchAtLogin", language))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(RadixPalette.text(colorScheme))
+                Text(L10n.text(launchAtLoginError ? "launchAtLoginFailed" : "launchAtLoginSubtitle", language))
+                    .font(.system(size: 11))
+                    .foregroundStyle(launchAtLoginError ? RadixPalette.dangerSolid(colorScheme) : RadixPalette.faintText(colorScheme))
+            }
+
+            Spacer()
+
+            Toggle("", isOn: launchAtLoginBinding)
                 .toggleStyle(.switch)
                 .labelsHidden()
         }
@@ -237,6 +265,13 @@ struct PushSettingsView: View {
         !barkPushAddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private var launchAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { launchAtLoginEnabled },
+            set: { setLaunchAtLogin($0) }
+        )
+    }
+
     private var settingsSurface: some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
             .fill(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.56 : 0.68))
@@ -274,6 +309,27 @@ struct PushSettingsView: View {
                 }
             }
         }
+    }
+
+    private func syncLaunchAtLoginStatus() {
+        launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
+        launchAtLoginError = false
+    }
+
+    private func setLaunchAtLogin(_ isEnabled: Bool) {
+        launchAtLoginError = false
+
+        do {
+            if isEnabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+        } catch {
+            launchAtLoginError = true
+        }
+
+        launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
     }
 }
 

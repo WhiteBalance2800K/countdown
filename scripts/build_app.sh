@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="Countdown"
 IDENTIFIER="com.example.countdown"
+APP_VERSION="0.4.0"
+BUNDLE_VERSION="4"
+RELEASE_TAG="v0.4"
 
 cd "$ROOT_DIR"
 
@@ -17,11 +20,13 @@ fi
 
 OUT_DIR="$ROOT_DIR/dist"
 APP_DIR="$OUT_DIR/$APP_NAME.app"
+ZIP_PATH="$OUT_DIR/$APP_NAME-$RELEASE_TAG-macOS.zip"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 
 rm -rf "$APP_DIR"
+rm -f "$ZIP_PATH"
 mkdir -p "$MACOS_DIR"
 mkdir -p "$RESOURCES_DIR"
 
@@ -76,9 +81,9 @@ cat > "$CONTENTS_DIR/Info.plist" <<EOF
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>$APP_VERSION</string>
   <key>CFBundleVersion</key>
-  <string>1</string>
+  <string>$BUNDLE_VERSION</string>
   <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
   <key>NSHighResolutionCapable</key>
@@ -87,5 +92,8 @@ cat > "$CONTENTS_DIR/Info.plist" <<EOF
 </plist>
 EOF
 
+COPYFILE_DISABLE=1 ditto -c -k --norsrc --keepParent "$APP_DIR" "$ZIP_PATH"
+
 echo "Built: $APP_DIR"
+echo "Built archive: $ZIP_PATH"
 echo "Tip: for coworker distribution, you may want to codesign+notarize."

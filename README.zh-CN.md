@@ -4,7 +4,7 @@
 
 Countdown 是一个 macOS SwiftUI 小工具，用来追踪到期日、续费日和其他需要提前关注的时间节点。
 
-当前版本：`v0.3`
+当前版本：`v0.4`
 
 ## 截图
 
@@ -12,6 +12,13 @@ Countdown 是一个 macOS SwiftUI 小工具，用来追踪到期日、续费日�
   <img src="Resources/screenshot-dashboard.png" alt="Countdown 主界面" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown 设置界面" width="45%">
 </p>
+
+## v0.4 更新内容
+
+- 增加倒计时数据自动备份，`items.json` 损坏时会提示恢复状态。
+- 增加 macOS 菜单栏入口，可快速打开 Countdown、新增项目、打开设置和退出。
+- 设置页新增开机启动选项。
+- 为 GitHub Release 构建并上传 `.app` 压缩包。
 
 ## v0.3 更新内容
 
@@ -38,6 +45,8 @@ Countdown 是一个 macOS SwiftUI 小工具，用来追踪到期日、续费日�
 - 跟随 macOS 深色/浅色模式。
 - 设置页支持 10 种语言切换。
 - 可选 Bark 推送提醒，支持到期前 7 天和到期当天推送。
+- 支持菜单栏快速入口。
+- 支持登录 macOS 后自动启动。
 - 核心功能本地优先，不需要账号或外部服务。
 
 ## 持久化
@@ -45,7 +54,9 @@ Countdown 是一个 macOS SwiftUI 小工具，用来追踪到期日、续费日�
 Countdown 会把用户数据保存在源码目录之外：
 
 - 倒计时卡片：`~/Library/Application Support/Countdown/items.json`
+- 倒计时数据备份：`~/Library/Application Support/Countdown/backups/`
 - UI、语言和推送偏好：通过 SwiftUI `@AppStorage` 写入 macOS `UserDefaults`
+- 开机启动：通过 macOS 登录项 `SMAppService` 管理
 
 仓库不会包含个人倒计时数据。本地备份和构建产物已通过 `.gitignore` 排除。
 
@@ -67,7 +78,7 @@ bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-生成的 App 位于 `dist/Countdown.app`。
+生成的 App 位于 `dist/Countdown.app`，Release 压缩包位于 `dist/Countdown-v0.4-macOS.zip`。
 
 ## Bark 推送设置
 

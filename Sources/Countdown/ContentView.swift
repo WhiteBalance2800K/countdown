@@ -1,7 +1,9 @@
+import AppKit
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var store: ItemsStore
+    @EnvironmentObject private var commandCenter: AppCommandCenter
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("sortAscending") private var sortAscending: Bool = true
     @AppStorage("sortMode") private var sortModeRaw: String = SortMode.remainingDays.rawValue
@@ -75,6 +77,16 @@ struct ContentView: View {
         .onReceive(store.$items) { _ in
             checkAndSendDuePushes()
         }
+        .onChange(of: commandCenter.addRequestID) { _ in
+            isShowingSettings = false
+            editingItem = nil
+            isAdding = true
+        }
+        .onChange(of: commandCenter.settingsRequestID) { _ in
+            isAdding = false
+            editingItem = nil
+            isShowingSettings = true
+        }
         .onChange(of: pushEnabled) { _ in
             checkAndSendDuePushes()
         }
@@ -117,6 +129,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isShowingSettings) {
             PushSettingsView()
+        }
+        .alert(item: $store.recoveryNotice) { notice in
+            recoveryAlert(for: notice)
         }
     }
 
@@ -186,4 +201,56 @@ struct ContentView: View {
     }
 
     private static let sentReminderDefaultsKey = "barkSentReminderKeys"
+
+    private func recoveryAlert(for notice: DataRecoveryNotice) -> Alert {
+        let title = Text(recoveryTitle(for: notice))
+        let message = Text(recoveryMessage(for: notice))
+
+        guard recoveryBackupURL(for: notice) != nil else {
+            return Alert(
+                title: title,
+                message: message,
+                dismissButton: .default(Text(L10n.text("ok", language)))
+            )
+        }
+
+        return Alert(
+            title: title,
+            message: message,
+            primaryButton: .default(Text(L10n.text("showBackup", language))) {
+                revealRecoveryBackup(for: notice)
+            },
+            secondaryButton: .default(Text(L10n.text("ok", language)))
+        )
+    }
+
+    private func recoveryTitle(for notice: DataRecoveryNotice) -> String {
+        switch notice.kind {
+        case .restored:
+            return L10n.text("dataRecoveredTitle", language)
+        case .manualRecoveryNeeded:
+            return L10n.text("dataRecoveryNeededTitle", language)
+        }
+    }
+
+    private func recoveryMessage(for notice: DataRecoveryNotice) -> String {
+        switch notice.kind {
+        case .restored(let restoredFromURL):
+            if restoredFromURL != nil, notice.corruptedBackupURL != nil {
+                return L10n.text("dataRecoveredMessage", language)
+            }
+            return L10n.text("dataRecoveredWithoutBackupPathMessage", language)
+        case .manualRecoveryNeeded:
+            return L10n.text("dataRecoveryNeededMessage", language)
+        }
+    }
+
+    private func recoveryBackupURL(for notice: DataRecoveryNotice) -> URL? {
+        notice.corruptedBackupURL
+    }
+
+    private func revealRecoveryBackup(for notice: DataRecoveryNotice) {
+        guard let url = recoveryBackupURL(for: notice) else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
 }

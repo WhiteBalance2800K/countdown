@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 Countdown is a small macOS SwiftUI app for tracking expiry dates, renewals, and time-sensitive items.
 
-Current version: `v0.3`
+Current version: `v0.4`
 
 ## Screenshots
 
@@ -12,6 +12,13 @@ Current version: `v0.3`
   <img src="Resources/screenshot-dashboard.png" alt="Countdown dashboard" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
 </p>
+
+## What's New In v0.4
+
+- Added automatic backups for countdown data and a recovery prompt when `items.json` is damaged.
+- Added a macOS menu bar entry for opening Countdown, adding an item, opening settings, and quitting.
+- Added a Launch at Login option in Settings.
+- Built and attached a compressed `.app` bundle for the GitHub Release.
 
 ## What's New In v0.3
 
@@ -38,6 +45,8 @@ Current version: `v0.3`
 - Light and dark mode support through native macOS appearance.
 - Language switcher with 10 app languages.
 - Optional Bark push reminders for 7 days before expiry and on the due date.
+- Menu bar entry for quick access.
+- Optional launch at login.
 - Local-first persistence with no account or external service required for core usage.
 
 ## Persistence
@@ -45,7 +54,9 @@ Current version: `v0.3`
 Countdown keeps user data outside the source tree:
 
 - Countdown cards: `~/Library/Application Support/Countdown/items.json`
+- Countdown data backups: `~/Library/Application Support/Countdown/backups/`
 - UI, language, and push preferences: macOS `UserDefaults` via SwiftUI `@AppStorage`
+- Launch at login: macOS Login Items through `SMAppService`
 
 The repository does not include personal countdown data. Local backups and build outputs are excluded by `.gitignore`.
 
@@ -67,7 +78,7 @@ bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-The generated app bundle is written to `dist/Countdown.app`.
+The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.4-macOS.zip`.
 
 ## Bark Push Setup
 
