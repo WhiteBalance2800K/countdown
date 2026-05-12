@@ -4,7 +4,7 @@
 
 Countdown 是一个 macOS SwiftUI 小工具，用来追踪到期日、续费日和其他需要提前关注的时间节点。
 
-当前版本：`v0.4`
+当前版本：`v0.5`
 
 ## 截图
 
@@ -12,6 +12,12 @@ Countdown 是一个 macOS SwiftUI 小工具，用来追踪到期日、续费日�
   <img src="Resources/screenshot-dashboard.png" alt="Countdown 主界面" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown 设置界面" width="45%">
 </p>
+
+## v0.5 更新内容
+
+- 大幅优化调整卡片时的流畅度，卡片移位改为弹性布局动画。
+- 拖拽过程中不再反复写入数据文件，落下卡片后再保存新顺序。
+- 去掉调整模式下持续抖动的卡片动画，改为更稳的拖起浮动反馈。
 
 ## v0.4 更新内容
 
@@ -78,7 +84,7 @@ bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-生成的 App 位于 `dist/Countdown.app`，Release 压缩包位于 `dist/Countdown-v0.4-macOS.zip`。
+生成的 App 位于 `dist/Countdown.app`，Release 压缩包位于 `dist/Countdown-v0.5-macOS.zip`。
 
 ## Bark 推送设置
 

@@ -42,14 +42,23 @@ final class ItemsStore: ObservableObject {
         saveToDisk()
     }
 
-    func moveItem(id: UUID, before targetID: UUID) {
+    func moveItem(id: UUID, before targetID: UUID, persistsImmediately: Bool = true) {
         guard id != targetID else { return }
         guard let fromIndex = items.firstIndex(where: { $0.id == id }) else { return }
         guard let toIndex = items.firstIndex(where: { $0.id == targetID }) else { return }
+        if toIndex > 0, items[toIndex - 1].id == id {
+            return
+        }
 
         let moving = items.remove(at: fromIndex)
         let insertIndex = fromIndex < toIndex ? max(toIndex - 1, 0) : toIndex
         items.insert(moving, at: insertIndex)
+        if persistsImmediately {
+            saveToDisk()
+        }
+    }
+
+    func saveCurrentOrder() {
         saveToDisk()
     }
 

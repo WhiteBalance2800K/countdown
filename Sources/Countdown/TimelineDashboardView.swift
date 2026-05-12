@@ -124,6 +124,7 @@ struct SoftDashboardView: View {
                             ))
                         }
                     }
+                    .animation(.interactiveSpring(response: 0.30, dampingFraction: 0.86, blendDuration: 0.10), value: items.map(\.id))
                     .frame(maxWidth: isCompact ? 330 : 520, alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.horizontal, isCompact ? 20 : 22)
@@ -146,7 +147,6 @@ private struct SoftMetricCard: View {
     let onDelete: () -> Void
 
     @State private var isHovering = false
-    @State private var isJiggling = false
 
     private var remainingDays: Int {
         item.remainingDays(on: now)
@@ -272,12 +272,7 @@ private struct SoftMetricCard: View {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(hoverStrokeColor, lineWidth: 1)
             }
-            .rotationEffect(.degrees(jiggleAngle))
-            .offset(x: jiggleOffsetX, y: isHovering ? -3 : 0)
-            .animation(
-                showsDragHandle ? .easeInOut(duration: 0.12).repeatForever(autoreverses: true) : .default,
-                value: isJiggling
-            )
+            .offset(y: isHovering ? -3 : 0)
             .scaleEffect(cardScale)
             .animation(.spring(response: 0.26, dampingFraction: 0.78), value: isHovering)
         }
@@ -285,35 +280,11 @@ private struct SoftMetricCard: View {
         .onHover { hovering in
             isHovering = hovering
         }
-        .onAppear {
-            if showsDragHandle {
-                isJiggling = true
-            }
-        }
-        .onChange(of: showsDragHandle) { newValue in
-            isJiggling = false
-            if newValue {
-                DispatchQueue.main.async {
-                    isJiggling = true
-                }
-            }
-        }
-    }
-
-    private var jiggleAngle: Double {
-        guard showsDragHandle else { return 0 }
-        let sign = item.id.uuidString.hashValue.isMultiple(of: 2) ? 1.0 : -1.0
-        return (isJiggling ? 0.62 : -0.62) * sign
-    }
-
-    private var jiggleOffsetX: CGFloat {
-        guard showsDragHandle else { return 0 }
-        return isJiggling ? 0.45 : -0.45
     }
 
     private var cardScale: CGFloat {
         if showsDragHandle {
-            return isJiggling ? 1.004 : 0.998
+            return isHovering ? 1.012 : 1
         }
         return isHovering ? 1.022 : 1
     }
@@ -568,16 +539,35 @@ private struct EmptySoftDashboardView: View {
 }
 
 private struct ManualReorderModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
     let enabled: Bool
     let item: CountdownItem
     let store: ItemsStore
     @Binding var draggingItemID: UUID?
 
+    private var isDragging: Bool {
+        draggingItemID == item.id
+    }
+
     func body(content: Content) -> some View {
         if enabled {
             content
+                .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .scaleEffect(isDragging ? 1.045 : 1)
+                .opacity(isDragging ? 0.78 : 1)
+                .shadow(
+                    color: Color.black.opacity(colorScheme == .dark ? 0.40 : 0.16),
+                    radius: isDragging ? 24 : 0,
+                    x: 0,
+                    y: isDragging ? 18 : 0
+                )
+                .zIndex(isDragging ? 10 : 0)
+                .animation(.interactiveSpring(response: 0.26, dampingFraction: 0.82, blendDuration: 0.08), value: draggingItemID)
                 .onDrag {
-                    draggingItemID = item.id
+                    withAnimation(.interactiveSpring(response: 0.24, dampingFraction: 0.84, blendDuration: 0.08)) {
+                        draggingItemID = item.id
+                    }
                     return NSItemProvider(object: item.id.uuidString as NSString)
                 }
                 .onDrop(

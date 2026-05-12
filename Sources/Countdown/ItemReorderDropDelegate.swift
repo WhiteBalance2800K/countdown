@@ -10,14 +10,20 @@ struct ItemReorderDropDelegate: DropDelegate {
         guard let draggingItemID else { return }
         guard draggingItemID != targetItem.id else { return }
 
-        // Keep the underlying array order in sync as the user hovers.
         Task { @MainActor in
-            store.moveItem(id: draggingItemID, before: targetItem.id)
+            withAnimation(.interactiveSpring(response: 0.30, dampingFraction: 0.86, blendDuration: 0.10)) {
+                store.moveItem(id: draggingItemID, before: targetItem.id, persistsImmediately: false)
+            }
         }
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        draggingItemID = nil
+        Task { @MainActor in
+            store.saveCurrentOrder()
+            withAnimation(.spring(response: 0.24, dampingFraction: 0.84)) {
+                draggingItemID = nil
+            }
+        }
         return true
     }
 
