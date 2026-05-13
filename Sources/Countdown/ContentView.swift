@@ -104,8 +104,13 @@ struct ContentView: View {
                 switch result {
                 case .cancel:
                     break
-                case .save(let name, let expiryDate):
-                    store.add(name: name, expiryDate: expiryDate)
+                case .save(let name, let expiryDate, let note, let reminderOffsets):
+                    store.add(
+                        name: name,
+                        expiryDate: expiryDate,
+                        note: note,
+                        reminderOffsets: reminderOffsets
+                    )
                 }
 
                 isAdding = false
@@ -116,10 +121,12 @@ struct ContentView: View {
                 switch result {
                 case .cancel:
                     break
-                case .save(let name, let expiryDate):
+                case .save(let name, let expiryDate, let note, let reminderOffsets):
                     var updated = item
                     updated.name = name
                     updated.expiryDate = expiryDate
+                    updated.note = note
+                    updated.reminderOffsets = reminderOffsets
                     updated.updatedAt = Date()
                     store.update(updated)
                 }
@@ -129,6 +136,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isShowingSettings) {
             PushSettingsView()
+                .environmentObject(store)
         }
         .alert(item: $store.recoveryNotice) { notice in
             recoveryAlert(for: notice)
@@ -151,13 +159,12 @@ struct ContentView: View {
         guard !isCheckingPushes else { return }
         let address = barkPushAddress.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !address.isEmpty, address != "https://api.day.app/" else { return }
-        guard pushSevenDaysEnabled || pushDueDayEnabled else { return }
 
         isCheckingPushes = true
 
         let snapshot = store.items
-        let sevenDaysEnabled = pushSevenDaysEnabled
-        let dueDayEnabled = pushDueDayEnabled
+        let legacySevenDaysEnabled = pushSevenDaysEnabled
+        let legacyDueDayEnabled = pushDueDayEnabled
 
         Task {
             var sentKeys = Set(UserDefaults.standard.stringArray(forKey: Self.sentReminderDefaultsKey) ?? [])
@@ -167,8 +174,14 @@ struct ContentView: View {
             for item in snapshot {
                 let expiry = calendar.startOfDay(for: item.expiryDate)
                 let days = calendar.dateComponents([.day], from: today, to: expiry).day ?? 0
-                let shouldSend = (days == 7 && sevenDaysEnabled) || (days == 0 && dueDayEnabled)
-                guard shouldSend else { continue }
+                guard days >= 0 else { continue }
+
+                let offsets = effectiveReminderOffsets(
+                    for: item,
+                    legacySevenDaysEnabled: legacySevenDaysEnabled,
+                    legacyDueDayEnabled: legacyDueDayEnabled
+                )
+                guard offsets.contains(days) else { continue }
 
                 let key = reminderKey(item: item, triggerDays: days, calendar: calendar)
                 guard !sentKeys.contains(key) else { continue }
@@ -191,6 +204,24 @@ struct ContentView: View {
                 isCheckingPushes = false
             }
         }
+    }
+
+    private func effectiveReminderOffsets(
+        for item: CountdownItem,
+        legacySevenDaysEnabled: Bool,
+        legacyDueDayEnabled: Bool
+    ) -> Set<Int> {
+        var offsets = Set(item.reminderOffsets)
+
+        // Keep old global switches meaningful for existing users.
+        if !legacySevenDaysEnabled {
+            offsets.remove(7)
+        }
+        if !legacyDueDayEnabled {
+            offsets.remove(0)
+        }
+
+        return offsets
     }
 
     private func reminderKey(item: CountdownItem, triggerDays: Int, calendar: Calendar) -> String {
