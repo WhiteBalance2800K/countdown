@@ -8,7 +8,17 @@ struct ItemEditorView: View {
 
     enum EditorResult {
         case cancel
-        case save(name: String, expiryDate: Date, note: String, reminderOffsets: [Int])
+        case save(
+            name: String,
+            expiryDate: Date,
+            note: String,
+            reminderOffsets: [Int],
+            category: String,
+            link: String,
+            isArchived: Bool,
+            repeatRule: RepeatRule,
+            repeatCustomDays: Int
+        )
     }
 
     enum ExpiryInputMode: String, CaseIterable, Identifiable {
@@ -16,13 +26,6 @@ struct ItemEditorView: View {
         case date
 
         var id: String { rawValue }
-
-        var label: String {
-            switch self {
-            case .date: return "日期"
-            case .remainingDays: return "天数"
-            }
-        }
 
         var iconName: String {
             switch self {
@@ -46,6 +49,11 @@ struct ItemEditorView: View {
     @State private var remainingDays: Int = 30
     @State private var note: String
     @State private var reminderOffsetsText: String
+    @State private var category: String
+    @State private var link: String
+    @State private var isArchived: Bool
+    @State private var repeatRule: RepeatRule
+    @State private var repeatCustomDays: Int
     @State private var didAppear = false
 
     private var trimmedName: String {
@@ -56,15 +64,15 @@ struct ItemEditorView: View {
         note.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
+    }
+
     private var parsedReminderOffsets: [Int] {
         let values = reminderOffsetsText
             .split { $0 == "," || $0 == "，" || $0 == " " || $0 == "\n" || $0 == "\t" }
             .compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
         return CountdownItem.normalizedReminderOffsets(values)
-    }
-
-    private var language: AppLanguage {
-        AppLanguage.current(from: appLanguageRaw)
     }
 
     private var finalExpiryDate: Date {
@@ -92,6 +100,11 @@ struct ItemEditorView: View {
         _expiryDate = State(initialValue: initialItem?.expiryDate ?? Date())
         _note = State(initialValue: initialItem?.note ?? "")
         _reminderOffsetsText = State(initialValue: (initialItem?.reminderOffsets ?? CountdownItem.defaultReminderOffsets).map(String.init).joined(separator: ", "))
+        _category = State(initialValue: initialItem?.category ?? "")
+        _link = State(initialValue: initialItem?.link ?? "")
+        _isArchived = State(initialValue: initialItem?.isArchived ?? false)
+        _repeatRule = State(initialValue: initialItem?.repeatRule ?? .none)
+        _repeatCustomDays = State(initialValue: initialItem?.repeatCustomDays ?? 30)
     }
 
     var body: some View {
@@ -114,8 +127,12 @@ struct ItemEditorView: View {
                         }
 
                         previewStrip
+                        categoryField
+                        linkField
                         noteField
                         reminderOffsetsField
+                        repeatRuleField
+                        archiveToggle
                     }
                     .padding(.horizontal, 18)
                     .padding(.top, 18)
@@ -139,7 +156,7 @@ struct ItemEditorView: View {
             .offset(y: didAppear ? 0 : 8)
             .animation(.easeOut(duration: 0.18), value: didAppear)
         }
-        .frame(width: 430, height: 580)
+        .frame(width: 430, height: 690)
         .onAppear {
             configureInitialValues()
             didAppear = true
@@ -160,6 +177,9 @@ struct ItemEditorView: View {
             if newValue != clamped {
                 remainingDays = clamped
             }
+        }
+        .onChange(of: repeatCustomDays) { newValue in
+            repeatCustomDays = max(newValue, 1)
         }
     }
 
@@ -269,6 +289,14 @@ struct ItemEditorView: View {
         }
     }
 
+    private var categoryField: some View {
+        labeledTextField(title: text("category"), placeholder: text("categoryPlaceholder"), text: $category, systemImage: "tag")
+    }
+
+    private var linkField: some View {
+        labeledTextField(title: text("link"), placeholder: text("linkPlaceholder"), text: $link, systemImage: "link")
+    }
+
     private var noteField: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("note", language))
@@ -311,6 +339,85 @@ struct ItemEditorView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
                 .lineLimit(2)
+        }
+    }
+
+    private var repeatRuleField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(text("repeat"))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+            Picker("", selection: $repeatRule) {
+                ForEach(RepeatRule.allCases) { rule in
+                    Text(repeatLabel(rule)).tag(rule)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .frame(height: 42)
+            .background(fieldBackground)
+            .overlay(fieldBorder)
+
+            if repeatRule == .customDays {
+                HStack(spacing: 9) {
+                    Image(systemName: "repeat")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(RadixPalette.accentSolid(colorScheme))
+
+                    TextField(text("repeatCustomDays"), value: $repeatCustomDays, format: .number)
+                        .font(.system(size: 13))
+                        .textFieldStyle(.plain)
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 42)
+                .background(fieldBackground)
+                .overlay(fieldBorder)
+            }
+        }
+    }
+
+    private var archiveToggle: some View {
+        Toggle(isOn: $isArchived) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(isArchived ? text("restore") : text("archive"))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(RadixPalette.text(colorScheme))
+                Text(text("archiveHelp"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(RadixPalette.faintText(colorScheme))
+            }
+        }
+        .toggleStyle(.switch)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.56 : 0.68))
+        )
+    }
+
+    private func labeledTextField(title: String, placeholder: String, text: Binding<String>, systemImage: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+            HStack(spacing: 9) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(RadixPalette.accentSolid(colorScheme))
+
+                TextField(placeholder, text: text)
+                    .font(.system(size: 13))
+                    .textFieldStyle(.plain)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 42)
+            .background(fieldBackground)
+            .overlay(fieldBorder)
         }
     }
 
@@ -416,6 +523,52 @@ struct ItemEditorView: View {
         }
     }
 
+    private func repeatLabel(_ rule: RepeatRule) -> String {
+        switch rule {
+        case .none: return text("none")
+        case .monthly: return text("monthly")
+        case .quarterly: return text("quarterly")
+        case .yearly: return text("yearly")
+        case .customDays: return text("customDays")
+        }
+    }
+
+    private func text(_ key: String) -> String {
+        let zh: [String: String] = [
+            "category": "分类",
+            "categoryPlaceholder": "例如：订阅、证件、域名",
+            "link": "链接",
+            "linkPlaceholder": "https://example.com",
+            "repeat": "重复",
+            "none": "不重复",
+            "monthly": "每月",
+            "quarterly": "每季度",
+            "yearly": "每年",
+            "customDays": "自定义天数",
+            "repeatCustomDays": "重复天数",
+            "archive": "归档",
+            "restore": "恢复",
+            "archiveHelp": "归档项目会从进行中视图隐藏，但不会删除。",
+        ]
+        let en: [String: String] = [
+            "category": "Category",
+            "categoryPlaceholder": "e.g. Subscription, Document, Domain",
+            "link": "Link",
+            "linkPlaceholder": "https://example.com",
+            "repeat": "Repeat",
+            "none": "None",
+            "monthly": "Monthly",
+            "quarterly": "Quarterly",
+            "yearly": "Yearly",
+            "customDays": "Custom days",
+            "repeatCustomDays": "Repeat days",
+            "archive": "Archive",
+            "restore": "Restore",
+            "archiveHelp": "Archived items are hidden from the active view but not deleted.",
+        ]
+        return language == .simplifiedChinese ? (zh[key] ?? en[key] ?? key) : (en[key] ?? key)
+    }
+
     private func cancel() {
         onDone(.cancel)
         dismiss()
@@ -427,7 +580,12 @@ struct ItemEditorView: View {
             name: trimmedName,
             expiryDate: finalExpiryDate,
             note: trimmedNote,
-            reminderOffsets: parsedReminderOffsets
+            reminderOffsets: parsedReminderOffsets,
+            category: category.trimmingCharacters(in: .whitespacesAndNewlines),
+            link: link.trimmingCharacters(in: .whitespacesAndNewlines),
+            isArchived: isArchived,
+            repeatRule: repeatRule,
+            repeatCustomDays: repeatCustomDays
         ))
         dismiss()
     }
@@ -438,6 +596,11 @@ struct ItemEditorView: View {
             remainingDays = 30
             inputMode = .remainingDays
             note = ""
+            category = ""
+            link = ""
+            isArchived = false
+            repeatRule = .none
+            repeatCustomDays = 30
             reminderOffsetsText = CountdownItem.defaultReminderOffsets.map(String.init).joined(separator: ", ")
             return
         }
@@ -446,6 +609,11 @@ struct ItemEditorView: View {
         let d = initialItem.remainingDays(on: Date(), calendar: cal)
         expiryDate = initialItem.expiryDate
         note = initialItem.note
+        category = initialItem.category
+        link = initialItem.link
+        isArchived = initialItem.isArchived
+        repeatRule = initialItem.repeatRule
+        repeatCustomDays = initialItem.repeatCustomDays
         reminderOffsetsText = initialItem.reminderOffsets.map(String.init).joined(separator: ", ")
 
         if d < 0 {

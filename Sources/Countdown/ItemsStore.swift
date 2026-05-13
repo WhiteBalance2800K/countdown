@@ -22,12 +22,27 @@ final class ItemsStore: ObservableObject {
         loadFromDisk()
     }
 
-    func add(name: String, expiryDate: Date, note: String = "", reminderOffsets: [Int] = CountdownItem.defaultReminderOffsets) {
+    func add(
+        name: String,
+        expiryDate: Date,
+        note: String = "",
+        reminderOffsets: [Int] = CountdownItem.defaultReminderOffsets,
+        category: String = "",
+        link: String = "",
+        isArchived: Bool = false,
+        repeatRule: RepeatRule = .none,
+        repeatCustomDays: Int = 30
+    ) {
         let item = CountdownItem(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
             expiryDate: expiryDate,
             note: note,
-            reminderOffsets: reminderOffsets
+            reminderOffsets: reminderOffsets,
+            category: category,
+            link: link,
+            isArchived: isArchived,
+            repeatRule: repeatRule,
+            repeatCustomDays: repeatCustomDays
         )
         .normalizedExpiryDate()
         items.append(item)
@@ -35,8 +50,7 @@ final class ItemsStore: ObservableObject {
     }
 
     func update(_ item: CountdownItem) {
-        let normalized = item
-            .normalizedExpiryDate()
+        let normalized = item.normalizedExpiryDate()
         guard let idx = items.firstIndex(where: { $0.id == normalized.id }) else { return }
         items[idx] = normalized
         saveToDisk()
@@ -45,6 +59,25 @@ final class ItemsStore: ObservableObject {
     func remove(_ item: CountdownItem) {
         items.removeAll { $0.id == item.id }
         saveToDisk()
+    }
+
+    func archive(_ item: CountdownItem) {
+        var copy = item
+        copy.isArchived = true
+        copy.updatedAt = Date()
+        update(copy)
+    }
+
+    func restore(_ item: CountdownItem) {
+        var copy = item
+        copy.isArchived = false
+        copy.updatedAt = Date()
+        update(copy)
+    }
+
+    func renew(_ item: CountdownItem) {
+        guard let renewed = item.nextRenewedItem() else { return }
+        update(renewed)
     }
 
     func moveItem(id: UUID, before targetID: UUID, persistsImmediately: Bool = true) {
