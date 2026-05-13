@@ -8,7 +8,7 @@ struct ItemEditorView: View {
 
     enum EditorResult {
         case cancel
-        case save(name: String, expiryDate: Date)
+        case save(name: String, expiryDate: Date, note: String, reminderOffsets: [Int])
     }
 
     enum ExpiryInputMode: String, CaseIterable, Identifiable {
@@ -44,10 +44,23 @@ struct ItemEditorView: View {
     @State private var inputMode: ExpiryInputMode = .remainingDays
     @State private var expiryDate: Date
     @State private var remainingDays: Int = 30
+    @State private var note: String
+    @State private var reminderOffsetsText: String
     @State private var didAppear = false
 
     private var trimmedName: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedNote: String {
+        note.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var parsedReminderOffsets: [Int] {
+        let values = reminderOffsetsText
+            .split { $0 == "," || $0 == "，" || $0 == " " || $0 == "\n" || $0 == "\t" }
+            .compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
+        return CountdownItem.normalizedReminderOffsets(values)
     }
 
     private var language: AppLanguage {
@@ -77,6 +90,8 @@ struct ItemEditorView: View {
 
         _name = State(initialValue: initialItem?.name ?? "")
         _expiryDate = State(initialValue: initialItem?.expiryDate ?? Date())
+        _note = State(initialValue: initialItem?.note ?? "")
+        _reminderOffsetsText = State(initialValue: (initialItem?.reminderOffsets ?? CountdownItem.defaultReminderOffsets).map(String.init).joined(separator: ", "))
     }
 
     var body: some View {
@@ -85,23 +100,27 @@ struct ItemEditorView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                VStack(spacing: 14) {
-                    titleField
-                    modeSelector
+                ScrollView {
+                    VStack(spacing: 14) {
+                        titleField
+                        modeSelector
 
-                    if inputMode == .remainingDays {
-                        remainingDaysEditor
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    } else {
-                        dateEditor
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        if inputMode == .remainingDays {
+                            remainingDaysEditor
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        } else {
+                            dateEditor
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+
+                        previewStrip
+                        noteField
+                        reminderOffsetsField
                     }
-
-                    previewStrip
+                    .padding(.horizontal, 18)
+                    .padding(.top, 18)
+                    .padding(.bottom, 18)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 18)
-                .padding(.bottom, 18)
 
                 footer
             }
@@ -120,7 +139,7 @@ struct ItemEditorView: View {
             .offset(y: didAppear ? 0 : 8)
             .animation(.easeOut(duration: 0.18), value: didAppear)
         }
-        .frame(width: 406)
+        .frame(width: 430, height: 580)
         .onAppear {
             configureInitialValues()
             didAppear = true
@@ -250,6 +269,51 @@ struct ItemEditorView: View {
         }
     }
 
+    private var noteField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.text("note", language))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+            TextEditor(text: $note)
+                .font(.system(size: 13))
+                .foregroundStyle(RadixPalette.text(colorScheme))
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .frame(height: 86)
+                .background(fieldBackground)
+                .overlay(fieldBorder)
+        }
+    }
+
+    private var reminderOffsetsField: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.text("customReminderOffsets", language))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+            HStack(spacing: 9) {
+                Image(systemName: "bell.badge")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(RadixPalette.accentSolid(colorScheme))
+
+                TextField("30, 7, 1, 0", text: $reminderOffsetsText)
+                    .font(.system(size: 13))
+                    .textFieldStyle(.plain)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 42)
+            .background(fieldBackground)
+            .overlay(fieldBorder)
+
+            Text(String(format: L10n.text("customReminderOffsetsHelp", language), parsedReminderOffsets.map(String.init).joined(separator: ", ")))
+                .font(.system(size: 10))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+                .lineLimit(2)
+        }
+    }
+
     private var previewStrip: some View {
         HStack(spacing: 10) {
             previewPill(
@@ -359,7 +423,12 @@ struct ItemEditorView: View {
 
     private func save() {
         guard !trimmedName.isEmpty else { return }
-        onDone(.save(name: trimmedName, expiryDate: finalExpiryDate))
+        onDone(.save(
+            name: trimmedName,
+            expiryDate: finalExpiryDate,
+            note: trimmedNote,
+            reminderOffsets: parsedReminderOffsets
+        ))
         dismiss()
     }
 
@@ -368,14 +437,24 @@ struct ItemEditorView: View {
             expiryDate = Date()
             remainingDays = 30
             inputMode = .remainingDays
+            note = ""
+            reminderOffsetsText = CountdownItem.defaultReminderOffsets.map(String.init).joined(separator: ", ")
             return
         }
 
         let cal = Calendar.current
         let d = initialItem.remainingDays(on: Date(), calendar: cal)
-        remainingDays = max(d, 0)
         expiryDate = initialItem.expiryDate
-        inputMode = .remainingDays
+        note = initialItem.note
+        reminderOffsetsText = initialItem.reminderOffsets.map(String.init).joined(separator: ", ")
+
+        if d < 0 {
+            remainingDays = 0
+            inputMode = .date
+        } else {
+            remainingDays = d
+            inputMode = .remainingDays
+        }
     }
 
     private func computedExpiryFromRemainingDays() -> Date {
