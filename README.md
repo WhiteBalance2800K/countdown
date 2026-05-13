@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 Countdown is a small macOS SwiftUI app for tracking expiry dates, renewals, and time-sensitive items.
 
-Current version: `v0.5`
+Current version: `v0.6`
 
 ## Screenshots
 
@@ -12,6 +12,14 @@ Current version: `v0.5`
   <img src="Resources/screenshot-dashboard.png" alt="Countdown dashboard" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
 </p>
+
+## What's New In v0.6
+
+- Added notes for countdown items.
+- Added per-item custom reminder offsets, such as `30, 7, 1, 0` days before expiry.
+- Fixed editing overdue items so their original expiry date is not accidentally reset to today.
+- Added nearest due items to the macOS menu bar menu.
+- Added Settings shortcuts for opening the data folder and backup folder in Finder.
 
 ## What's New In v0.5
 
@@ -44,14 +52,16 @@ Current version: `v0.5`
 ## Features
 
 - Add, edit, and delete countdown items.
+- Add notes to countdown items.
 - Enter an expiry date directly or by remaining days.
+- Set custom reminder offsets per item.
 - Compact card layout with color-coded ring progress.
 - Manual drag ordering with a lightweight arrange mode.
 - One-click ordering by near or far expiry dates.
 - Light and dark mode support through native macOS appearance.
 - Language switcher with 10 app languages.
-- Optional Bark push reminders for 7 days before expiry and on the due date.
-- Menu bar entry for quick access.
+- Optional Bark push reminders based on each item's custom reminder offsets.
+- Menu bar entry with nearest due items and quick actions.
 - Optional launch at login.
 - Local-first persistence with no account or external service required for core usage.
 
@@ -84,7 +94,7 @@ bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.5-macOS.zip`.
+The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.6-macOS.zip`.
 
 ## Bark Push Setup
 
@@ -97,6 +107,14 @@ https://api.day.app/your-key
 ```
 
 Countdown appends the notification title and body automatically.
+
+Each countdown item can define custom reminder offsets, for example:
+
+```text
+30, 7, 1, 0
+```
+
+This means Countdown can remind you 30 days, 7 days, 1 day, and 0 days before the item expires.
 
 ## Project Structure
 
