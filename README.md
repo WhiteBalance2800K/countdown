@@ -2,9 +2,16 @@
 
 English | [简体中文](README.zh-CN.md)
 
-Countdown is a small macOS SwiftUI app for tracking expiry dates, renewals, and time-sensitive items.
+![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
+![Swift](https://img.shields.io/badge/Swift-6.2-orange)
+![Version](https://img.shields.io/badge/version-v0.8-green)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+Countdown is a small local-first macOS SwiftUI app for tracking expiry dates, renewals, recurring reminders, and other time-sensitive items.
 
 Current version: `v0.8`
+
+[Download Latest Release](https://github.com/WhiteBalance2800K/countdown/releases)
 
 ## Screenshots
 
@@ -13,92 +20,61 @@ Current version: `v0.8`
   <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
 </p>
 
-## What's New In v0.8
+## Highlights
 
-- Added category and link fields for each countdown item.
-- Added archive and restore support so completed items can be hidden without deletion.
-- Added repeat rules: monthly, quarterly, yearly, and custom day intervals.
-- Added search across name, note, category, and link.
-- Added dashboard filters for active, all, 30-day, overdue, and archived items.
-- Added store helpers for archive, restore, and one-click renewal.
-- Updated the item editor to manage category, link, repeat rule, archive state, notes, and reminder offsets together.
+- Track expiry dates, renewals, deadlines, and recurring items.
+- Add notes, categories, and links to each countdown item.
+- Set custom reminder offsets such as `30, 7, 1, 0` days before expiry.
+- Use repeat rules for monthly, quarterly, yearly, or custom day intervals.
+- Search and filter countdown items by status, category, note, or link.
+- Archive completed items without deleting them.
+- Optional Bark push reminders.
+- Local-first persistence with no account required.
 
-## What's New In v0.7
+## Use Cases
 
-- Fixed manual card rearranging so an item near the top can be dragged to the end.
-- Removed the heavy translucent drag shadow and replaced it with a subtle outline feedback.
-- Kept the smooth spring movement for neighboring cards while dragging.
+Countdown is useful for tracking:
 
-## What's New In v0.6
-
-- Added notes for countdown items.
-- Added per-item custom reminder offsets, such as `30, 7, 1, 0` days before expiry.
-- Fixed editing overdue items so their original expiry date is not accidentally reset to today.
-- Added nearest due items to the macOS menu bar menu.
-- Added Settings shortcuts for opening the data folder and backup folder in Finder.
-
-## What's New In v0.5
-
-- Made card rearranging substantially smoother with spring layout animation.
-- Reduced reorder-mode overhead by saving the new order once when the drag is dropped.
-- Replaced constant card jiggle with a calmer drag lift interaction.
-
-## What's New In v0.4
-
-- Added automatic backups for countdown data and a recovery prompt when `items.json` is damaged.
-- Added a macOS menu bar entry for opening Countdown, adding an item, opening settings, and quitting.
-- Added a Launch at Login option in Settings.
-- Built and attached a compressed `.app` bundle for the GitHub Release.
-
-## What's New In v0.3
-
-- Split the documentation into separate English and Simplified Chinese README pages.
-- Kept English as the default GitHub README.
-- Adjusted the screenshots section so the two images are displayed side by side at half width.
-- Updated release metadata for `v0.3`.
-
-## What's New In v0.2
-
-- Added a language switcher in Settings.
-- Added 10 app languages: Simplified Chinese, English, Spanish, Hindi, Arabic, French, Bengali, Portuguese, Russian, and Japanese.
-- Localized the main dashboard, add/edit dialog, settings dialog, date display, and Bark push text.
-- Connected the selected language to native date formatting and the macOS date picker locale.
-- Kept all localization preferences local through `UserDefaults`.
+- subscription renewals
+- domain and certificate expiry dates
+- warranty and insurance deadlines
+- membership renewals
+- personal deadlines
+- recurring reminders
+- items that should not be forgotten before they expire
 
 ## Features
 
 - Add, edit, archive, restore, and delete countdown items.
-- Add notes, categories, and links to countdown items.
 - Enter an expiry date directly or by remaining days.
+- Add notes, categories, and links.
 - Set custom reminder offsets per item.
 - Set repeat rules and renew recurring countdown items.
 - Search by name, note, category, or link.
-- Filter the dashboard by active, all, 30-day, overdue, or archived items.
+- Filter by active, all, 30-day, overdue, or archived items.
 - Compact card layout with color-coded ring progress.
-- Manual drag ordering with a lightweight arrange mode.
-- One-click ordering by near or far expiry dates.
-- Light and dark mode support through native macOS appearance.
+- Manual drag ordering with arrange mode.
+- One-click ordering by nearest or farthest expiry date.
+- Native light and dark mode support.
 - Language switcher with 10 app languages.
-- Optional Bark push reminders based on each item's custom reminder offsets.
+- Optional Bark push reminders.
 - Menu bar entry with nearest due items and quick actions.
 - Optional launch at login.
-- Local-first persistence with no account or external service required for core usage.
+- Local-first storage for core usage.
 
-## Persistence
+## Download
 
-Countdown keeps user data outside the source tree:
+Download the latest app bundle from the [Releases](https://github.com/WhiteBalance2800K/countdown/releases) page.
 
-- Countdown cards: `~/Library/Application Support/Countdown/items.json`
-- Countdown data backups: `~/Library/Application Support/Countdown/backups/`
-- UI, language, and push preferences: macOS `UserDefaults` via SwiftUI `@AppStorage`
-- Launch at login: macOS Login Items through `SMAppService`
-
-The repository does not include personal countdown data. Local backups and build outputs are excluded by `.gitignore`.
+1. Download `Countdown-v0.8-macOS.zip`.
+2. Unzip it.
+3. Move `Countdown.app` to `/Applications`.
+4. Open Countdown from Finder or Launchpad.
 
 ## Requirements
 
 - macOS 13 or later
-- Swift 6.2 or later
+- Swift 6.2 or later, only required when building from source
 
 ## Run From Source
 
@@ -113,11 +89,21 @@ bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.8-macOS.zip`.
+The generated app bundle is written to:
+
+```text
+dist/Countdown.app
+```
+
+The release archive is written to:
+
+```text
+dist/Countdown-v0.8-macOS.zip
+```
 
 ## Bark Push Setup
 
-1. Install Bark on your iPhone and copy the Bark push URL.
+1. Install Bark on your iPhone and copy your Bark push URL.
 2. Open Countdown settings.
 3. Paste a URL like:
 
@@ -135,6 +121,17 @@ Each countdown item can define custom reminder offsets, for example:
 
 This means Countdown can remind you 30 days, 7 days, 1 day, and 0 days before the item expires.
 
+## Data Storage & Privacy
+
+Countdown keeps user data outside the source tree:
+
+- Countdown items: `~/Library/Application Support/Countdown/items.json`
+- Data backups: `~/Library/Application Support/Countdown/backups/`
+- UI, language, and push preferences: macOS `UserDefaults` via SwiftUI `@AppStorage`
+- Launch at login: macOS Login Items through `SMAppService`
+
+Countdown does not require an account for core usage. Bark push is optional. The repository does not include personal countdown data. Local backups and build outputs are excluded by `.gitignore`.
+
 ## Project Structure
 
 ```text
@@ -142,6 +139,10 @@ Sources/Countdown/        SwiftUI app source
 Resources/                App icon and public screenshots
 scripts/build_app.sh      Local .app bundle build script
 ```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
