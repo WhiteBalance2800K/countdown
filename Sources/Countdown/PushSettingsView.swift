@@ -224,7 +224,7 @@ struct PushSettingsView: View {
 
     private var dataSection: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text(L10n.text("data", language))
+            Text(V06Text.text("data", language))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
 
@@ -232,7 +232,7 @@ struct PushSettingsView: View {
                 Button {
                     reveal(store.appSupportDirectoryURL())
                 } label: {
-                    Label(L10n.text("openDataFolder", language), systemImage: "folder")
+                    Label(V06Text.text("openDataFolder", language), systemImage: "folder")
                         .font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
@@ -240,7 +240,7 @@ struct PushSettingsView: View {
                 Button {
                     reveal(store.backupsDirectoryURL())
                 } label: {
-                    Label(L10n.text("openBackupFolder", language), systemImage: "clock.arrow.circlepath")
+                    Label(V06Text.text("openBackupFolder", language), systemImage: "clock.arrow.circlepath")
                         .font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
