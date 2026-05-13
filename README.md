@@ -20,16 +20,27 @@ Current version: `v0.8`
   <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
 </p>
 
-## Highlights
+## Features
 
-- Track expiry dates, renewals, deadlines, and recurring items.
-- Add notes, categories, and links to each countdown item.
-- Set custom reminder offsets such as `30, 7, 1, 0` days before expiry.
-- Use repeat rules for monthly, quarterly, yearly, or custom day intervals.
-- Search and filter countdown items by status, category, note, or link.
-- Archive completed items without deleting them.
-- Optional Bark push reminders.
-- Local-first persistence with no account required.
+- [x] Track expiry dates, renewals, deadlines, and recurring items.
+- [x] Add, edit, archive, restore, and delete countdown items.
+- [x] Enter an expiry date directly or by remaining days.
+- [x] Add notes, categories, and links to each countdown item.
+- [x] Set custom reminder offsets such as `30, 7, 1, 0` days before expiry.
+- [x] Use repeat rules for monthly, quarterly, yearly, or custom day intervals.
+- [x] Renew recurring countdown items with one click.
+- [x] Search by name, note, category, or link.
+- [x] Filter by active, all, 30-day, overdue, or archived items.
+- [x] Archive completed items without deleting them.
+- [x] Compact card layout with color-coded ring progress.
+- [x] Manual drag ordering with arrange mode.
+- [x] One-click ordering by nearest or farthest expiry date.
+- [x] Native light and dark mode support.
+- [x] Language switcher with 10 app languages.
+- [x] Optional Bark push reminders.
+- [x] Menu bar entry with nearest due items and quick actions.
+- [x] Optional launch at login.
+- [x] Local-first persistence with no account required.
 
 ## Use Cases
 
@@ -43,24 +54,18 @@ Countdown is useful for tracking:
 - recurring reminders
 - items that should not be forgotten before they expire
 
-## Features
+## Roadmap / Todo
 
-- Add, edit, archive, restore, and delete countdown items.
-- Enter an expiry date directly or by remaining days.
-- Add notes, categories, and links.
-- Set custom reminder offsets per item.
-- Set repeat rules and renew recurring countdown items.
-- Search by name, note, category, or link.
-- Filter by active, all, 30-day, overdue, or archived items.
-- Compact card layout with color-coded ring progress.
-- Manual drag ordering with arrange mode.
-- One-click ordering by nearest or farthest expiry date.
-- Native light and dark mode support.
-- Language switcher with 10 app languages.
-- Optional Bark push reminders.
-- Menu bar entry with nearest due items and quick actions.
-- Optional launch at login.
-- Local-first storage for core usage.
+- [ ] Add native macOS notifications as an alternative to Bark push.
+- [ ] Add iCloud sync or optional file-based sync for users with multiple Macs.
+- [ ] Add import and export support for JSON or CSV files.
+- [ ] Add calendar export support, such as `.ics` files.
+- [ ] Add more dashboard views, such as grouped-by-category and timeline views.
+- [ ] Add smarter recurring rules, such as every N months or custom weekdays.
+- [ ] Add batch editing for categories, reminder offsets, and archive status.
+- [ ] Add keyboard shortcuts for adding, searching, archiving, and arranging items.
+- [ ] Add stronger data recovery tools for damaged or manually edited data files.
+- [ ] Add automated tests for item storage, repeat rules, reminders, and backup recovery.
 
 ## Download
 
