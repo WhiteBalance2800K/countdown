@@ -107,24 +107,34 @@ struct SoftDashboardView: View {
                 if items.isEmpty {
                     EmptySoftDashboardView()
                 } else {
-                    LazyVGrid(columns: columns, spacing: 14) {
-                        ForEach(items) { item in
-                            SoftMetricCard(
-                                item: item,
-                                now: now,
-                                showsDragHandle: isManualOrder,
-                                onEdit: { onEdit(item) },
-                                onDelete: { onDelete(item) }
-                            )
-                            .modifier(ManualReorderModifier(
-                                enabled: isManualOrder,
-                                item: item,
+                    VStack(spacing: 0) {
+                        LazyVGrid(columns: columns, spacing: 14) {
+                            ForEach(items) { item in
+                                SoftMetricCard(
+                                    item: item,
+                                    now: now,
+                                    showsDragHandle: isManualOrder,
+                                    onEdit: { onEdit(item) },
+                                    onDelete: { onDelete(item) }
+                                )
+                                .modifier(ManualReorderModifier(
+                                    enabled: isManualOrder,
+                                    item: item,
+                                    store: store,
+                                    draggingItemID: $draggingItemID
+                                ))
+                            }
+                        }
+                        .animation(.interactiveSpring(response: 0.30, dampingFraction: 0.86, blendDuration: 0.10), value: items.map(\.id))
+
+                        if isManualOrder, let lastItem = items.last {
+                            ReorderEndDropTarget(
+                                lastItem: lastItem,
                                 store: store,
                                 draggingItemID: $draggingItemID
-                            ))
+                            )
                         }
                     }
-                    .animation(.interactiveSpring(response: 0.30, dampingFraction: 0.86, blendDuration: 0.10), value: items.map(\.id))
                     .frame(maxWidth: isCompact ? 330 : 520, alignment: .center)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.horizontal, isCompact ? 20 : 22)
@@ -554,14 +564,14 @@ private struct ManualReorderModifier: ViewModifier {
         if enabled {
             content
                 .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                .scaleEffect(isDragging ? 1.045 : 1)
-                .opacity(isDragging ? 0.78 : 1)
-                .shadow(
-                    color: Color.black.opacity(colorScheme == .dark ? 0.40 : 0.16),
-                    radius: isDragging ? 24 : 0,
-                    x: 0,
-                    y: isDragging ? 18 : 0
-                )
+                .scaleEffect(isDragging ? 1.018 : 1)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(
+                            RadixPalette.accentSolid(colorScheme).opacity(isDragging ? 0.54 : 0),
+                            lineWidth: 1.5
+                        )
+                }
                 .zIndex(isDragging ? 10 : 0)
                 .animation(.interactiveSpring(response: 0.26, dampingFraction: 0.82, blendDuration: 0.08), value: draggingItemID)
                 .onDrag {
@@ -569,17 +579,41 @@ private struct ManualReorderModifier: ViewModifier {
                         draggingItemID = item.id
                     }
                     return NSItemProvider(object: item.id.uuidString as NSString)
+                } preview: {
+                    Color.clear.frame(width: 1, height: 1)
                 }
                 .onDrop(
                     of: [UTType.text],
                     delegate: ItemReorderDropDelegate(
                         targetItem: item,
                         store: store,
-                        draggingItemID: $draggingItemID
+                        draggingItemID: $draggingItemID,
+                        placement: .before
                     )
                 )
         } else {
             content
         }
+    }
+}
+
+private struct ReorderEndDropTarget: View {
+    let lastItem: CountdownItem
+    let store: ItemsStore
+    @Binding var draggingItemID: UUID?
+
+    var body: some View {
+        Color.clear
+            .frame(height: 72)
+            .contentShape(Rectangle())
+            .onDrop(
+                of: [UTType.text],
+                delegate: ItemReorderDropDelegate(
+                    targetItem: lastItem,
+                    store: store,
+                    draggingItemID: $draggingItemID,
+                    placement: .end
+                )
+            )
     }
 }

@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 Countdown is a small macOS SwiftUI app for tracking expiry dates, renewals, and time-sensitive items.
 
-Current version: `v0.6`
+Current version: `v0.7`
 
 ## Screenshots
 
@@ -12,6 +12,12 @@ Current version: `v0.6`
   <img src="Resources/screenshot-dashboard.png" alt="Countdown dashboard" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
 </p>
+
+## What's New In v0.7
+
+- Fixed manual card rearranging so an item near the top can be dragged to the end.
+- Removed the heavy translucent drag shadow and replaced it with a subtle outline feedback.
+- Kept the smooth spring movement for neighboring cards while dragging.
 
 ## What's New In v0.6
 
@@ -94,7 +100,7 @@ bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.6-macOS.zip`.
+The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.7-macOS.zip`.
 
 ## Bark Push Setup
 

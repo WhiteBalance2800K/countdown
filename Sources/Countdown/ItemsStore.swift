@@ -51,12 +51,36 @@ final class ItemsStore: ObservableObject {
         guard id != targetID else { return }
         guard let fromIndex = items.firstIndex(where: { $0.id == id }) else { return }
         guard let toIndex = items.firstIndex(where: { $0.id == targetID }) else { return }
-        if toIndex > 0, items[toIndex - 1].id == id {
-            return
+        guard fromIndex != toIndex, fromIndex + 1 != toIndex else { return }
+
+        moveItem(id: id, to: toIndex, persistsImmediately: persistsImmediately)
+    }
+
+    func moveItem(id: UUID, after targetID: UUID, persistsImmediately: Bool = true) {
+        guard id != targetID else { return }
+        guard let fromIndex = items.firstIndex(where: { $0.id == id }) else { return }
+        guard let toIndex = items.firstIndex(where: { $0.id == targetID }) else { return }
+        guard fromIndex != toIndex, fromIndex != toIndex + 1 else { return }
+
+        moveItem(id: id, to: toIndex + 1, persistsImmediately: persistsImmediately)
+    }
+
+    func moveItemToEnd(id: UUID, persistsImmediately: Bool = true) {
+        guard let fromIndex = items.firstIndex(where: { $0.id == id }) else { return }
+        guard fromIndex != items.index(before: items.endIndex) else { return }
+
+        moveItem(id: id, to: items.endIndex, persistsImmediately: persistsImmediately)
+    }
+
+    private func moveItem(id: UUID, to destinationIndex: Int, persistsImmediately: Bool) {
+        guard let fromIndex = items.firstIndex(where: { $0.id == id }) else { return }
+        let boundedDestination = min(max(destinationIndex, items.startIndex), items.endIndex)
+        var insertIndex = boundedDestination
+        if fromIndex < boundedDestination {
+            insertIndex -= 1
         }
 
         let moving = items.remove(at: fromIndex)
-        let insertIndex = fromIndex < toIndex ? max(toIndex - 1, 0) : toIndex
         items.insert(moving, at: insertIndex)
         if persistsImmediately {
             saveToDisk()
