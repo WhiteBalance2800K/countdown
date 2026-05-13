@@ -1,0 +1,55 @@
+# Changelog
+
+All notable changes to Countdown are documented in this file.
+
+## v0.8
+
+- Added category and link fields for each countdown item.
+- Added archive and restore support so completed items can be hidden without deletion.
+- Added repeat rules: monthly, quarterly, yearly, and custom day intervals.
+- Added search across name, note, category, and link.
+- Added dashboard filters for active, all, 30-day, overdue, and archived items.
+- Added store helpers for archive, restore, and one-click renewal.
+- Updated the item editor to manage category, link, repeat rule, archive state, notes, and reminder offsets together.
+
+## v0.7
+
+- Fixed manual card rearranging so an item near the top can be dragged to the end.
+- Removed the heavy translucent drag shadow and replaced it with a subtle outline feedback.
+- Kept the smooth spring movement for neighboring cards while dragging.
+
+## v0.6
+
+- Added notes for countdown items.
+- Added per-item custom reminder offsets, such as `30, 7, 1, 0` days before expiry.
+- Fixed editing overdue items so their original expiry date is not accidentally reset to today.
+- Added nearest due items to the macOS menu bar menu.
+- Added Settings shortcuts for opening the data folder and backup folder in Finder.
+
+## v0.5
+
+- Made card rearranging substantially smoother with spring layout animation.
+- Reduced reorder-mode overhead by saving the new order once when the drag is dropped.
+- Replaced constant card jiggle with a calmer drag lift interaction.
+
+## v0.4
+
+- Added automatic backups for countdown data and a recovery prompt when `items.json` is damaged.
+- Added a macOS menu bar entry for opening Countdown, adding an item, opening settings, and quitting.
+- Added a Launch at Login option in Settings.
+- Built and attached a compressed `.app` bundle for the GitHub Release.
+
+## v0.3
+
+- Split the documentation into separate English and Simplified Chinese README pages.
+- Kept English as the default GitHub README.
+- Adjusted the screenshots section so the two images are displayed side by side at half width.
+- Updated release metadata for `v0.3`.
+
+## v0.2
+
+- Added a language switcher in Settings.
+- Added 10 app languages: Simplified Chinese, English, Spanish, Hindi, Arabic, French, Bengali, Portuguese, Russian, and Japanese.
+- Localized the main dashboard, add/edit dialog, settings dialog, date display, and Bark push text.
+- Connected the selected language to native date formatting and the macOS date picker locale.
+- Kept all localization preferences local through `UserDefaults`.
