@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 Countdown is a small macOS SwiftUI app for tracking expiry dates, renewals, and time-sensitive items.
 
-Current version: `v0.7`
+Current version: `v0.8`
 
 ## Screenshots
 
@@ -12,6 +12,16 @@ Current version: `v0.7`
   <img src="Resources/screenshot-dashboard.png" alt="Countdown dashboard" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
 </p>
+
+## What's New In v0.8
+
+- Added category and link fields for each countdown item.
+- Added archive and restore support so completed items can be hidden without deletion.
+- Added repeat rules: monthly, quarterly, yearly, and custom day intervals.
+- Added search across name, note, category, and link.
+- Added dashboard filters for active, all, 30-day, overdue, and archived items.
+- Added store helpers for archive, restore, and one-click renewal.
+- Updated the item editor to manage category, link, repeat rule, archive state, notes, and reminder offsets together.
 
 ## What's New In v0.7
 
@@ -57,10 +67,13 @@ Current version: `v0.7`
 
 ## Features
 
-- Add, edit, and delete countdown items.
-- Add notes to countdown items.
+- Add, edit, archive, restore, and delete countdown items.
+- Add notes, categories, and links to countdown items.
 - Enter an expiry date directly or by remaining days.
 - Set custom reminder offsets per item.
+- Set repeat rules and renew recurring countdown items.
+- Search by name, note, category, or link.
+- Filter the dashboard by active, all, 30-day, overdue, or archived items.
 - Compact card layout with color-coded ring progress.
 - Manual drag ordering with a lightweight arrange mode.
 - One-click ordering by near or far expiry dates.
@@ -100,7 +113,7 @@ bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.7-macOS.zip`.
+The generated app bundle is written to `dist/Countdown.app`, and the release archive is written to `dist/Countdown-v0.8-macOS.zip`.
 
 ## Bark Push Setup
 
