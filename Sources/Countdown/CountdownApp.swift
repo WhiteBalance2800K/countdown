@@ -29,6 +29,13 @@ struct CountdownApp: App {
     }
 }
 
+private struct MenuCountdownEntry: Identifiable {
+    let item: CountdownItem
+    let days: Int
+
+    var id: UUID { item.id }
+}
+
 private struct CountdownMenuBarView: View {
     @Environment(\.openWindow) private var openWindow
     @EnvironmentObject private var store: ItemsStore
@@ -39,15 +46,15 @@ private struct CountdownMenuBarView: View {
         AppLanguage.current(from: appLanguageRaw)
     }
 
-    private var nearestItems: [(item: CountdownItem, days: Int)] {
+    private var nearestItems: [MenuCountdownEntry] {
         let now = Date()
         return store.items
-            .map { ($0, $0.remainingDays(on: now)) }
+            .map { MenuCountdownEntry(item: $0, days: $0.remainingDays(on: now)) }
             .sorted { lhs, rhs in
-                if lhs.1 == rhs.1 {
-                    return lhs.0.name.localizedCaseInsensitiveCompare(rhs.0.name) == .orderedAscending
+                if lhs.days == rhs.days {
+                    return lhs.item.name.localizedCaseInsensitiveCompare(rhs.item.name) == .orderedAscending
                 }
-                return lhs.1 < rhs.1
+                return lhs.days < rhs.days
             }
             .prefix(3)
             .map { $0 }
@@ -82,7 +89,7 @@ private struct CountdownMenuBarView: View {
             Divider()
             Text(menuNearestTitle)
 
-            ForEach(nearestItems, id: \.item.id) { entry in
+            ForEach(nearestItems) { entry in
                 Button {
                     openMainWindow()
                 } label: {
