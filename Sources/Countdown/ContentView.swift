@@ -5,6 +5,7 @@ struct ContentView: View {
     @EnvironmentObject private var store: ItemsStore
     @EnvironmentObject private var commandCenter: AppCommandCenter
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("sortAscending") private var sortAscending: Bool = true
     @AppStorage("sortMode") private var sortModeRaw: String = SortMode.remainingDays.rawValue
     @AppStorage("pushEnabled") private var pushEnabled: Bool = false
@@ -19,16 +20,44 @@ struct ContentView: View {
     @State private var isCheckingPushes = false
     @State private var editingItem: CountdownItem?
     @State private var draggingItemID: UUID?
+    @State private var searchText = ""
+    @State private var filterRaw = DashboardFilter.active.rawValue
 
     private enum SortMode: String {
         case remainingDays
         case manual
     }
 
+    private enum DashboardFilter: String, CaseIterable, Identifiable {
+        case active
+        case all
+        case within30
+        case overdue
+        case archived
+
+        var id: String { rawValue }
+    }
+
     private var sortMode: SortMode { SortMode(rawValue: sortModeRaw) ?? .remainingDays }
+    private var filter: DashboardFilter { DashboardFilter(rawValue: filterRaw) ?? .active }
 
     private var displayItems: [CountdownItem] {
-        store.items
+        store.items.filter { item in
+            guard item.matchesSearch(searchText) else { return false }
+            let days = item.remainingDays(on: now)
+            switch filter {
+            case .active:
+                return !item.isArchived
+            case .all:
+                return true
+            case .within30:
+                return !item.isArchived && (0...30).contains(days)
+            case .overdue:
+                return !item.isArchived && days < 0
+            case .archived:
+                return item.isArchived
+            }
+        }
     }
 
     private var language: AppLanguage {
@@ -39,15 +68,21 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             SoftBackground()
 
-            SoftDashboardView(
-                items: displayItems,
-                now: now,
-                isManualOrder: sortMode == .manual,
-                store: store,
-                draggingItemID: $draggingItemID,
-                onEdit: { editingItem = $0 },
-                onDelete: { store.remove($0) }
-            )
+            VStack(spacing: 0) {
+                dashboardFilterBar
+                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+
+                SoftDashboardView(
+                    items: displayItems,
+                    now: now,
+                    isManualOrder: sortMode == .manual,
+                    store: store,
+                    draggingItemID: $draggingItemID,
+                    onEdit: { editingItem = $0 },
+                    onDelete: { store.remove($0) }
+                )
+            }
 
             FloatingDashboardControls(
                 sortAscending: sortAscending,
@@ -70,7 +105,6 @@ struct ContentView: View {
             }
         }
         .onReceive(Timer.publish(every: 3600, on: .main, in: .common).autoconnect()) { _ in
-            // Cheap refresh to ensure day boundary updates.
             now = Date()
             checkAndSendDuePushes()
         }
@@ -104,12 +138,17 @@ struct ContentView: View {
                 switch result {
                 case .cancel:
                     break
-                case .save(let name, let expiryDate, let note, let reminderOffsets):
+                case .save(let name, let expiryDate, let note, let reminderOffsets, let category, let link, let isArchived, let repeatRule, let repeatCustomDays):
                     store.add(
                         name: name,
                         expiryDate: expiryDate,
                         note: note,
-                        reminderOffsets: reminderOffsets
+                        reminderOffsets: reminderOffsets,
+                        category: category,
+                        link: link,
+                        isArchived: isArchived,
+                        repeatRule: repeatRule,
+                        repeatCustomDays: repeatCustomDays
                     )
                 }
 
@@ -121,12 +160,17 @@ struct ContentView: View {
                 switch result {
                 case .cancel:
                     break
-                case .save(let name, let expiryDate, let note, let reminderOffsets):
+                case .save(let name, let expiryDate, let note, let reminderOffsets, let category, let link, let isArchived, let repeatRule, let repeatCustomDays):
                     var updated = item
                     updated.name = name
                     updated.expiryDate = expiryDate
                     updated.note = note
                     updated.reminderOffsets = reminderOffsets
+                    updated.category = category
+                    updated.link = link
+                    updated.isArchived = isArchived
+                    updated.repeatRule = repeatRule
+                    updated.repeatCustomDays = repeatCustomDays
                     updated.updatedAt = Date()
                     store.update(updated)
                 }
@@ -141,6 +185,40 @@ struct ContentView: View {
         .alert(item: $store.recoveryNotice) { notice in
             recoveryAlert(for: notice)
         }
+    }
+
+    private var dashboardFilterBar: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+                TextField(text("searchPlaceholder"), text: $searchText)
+                    .font(.system(size: 13))
+                    .textFieldStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 38)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.62 : 0.76))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(RadixPalette.border(colorScheme).opacity(0.38), lineWidth: 1)
+            )
+
+            Picker("", selection: $filterRaw) {
+                ForEach(DashboardFilter.allCases) { option in
+                    Text(filterLabel(option)).tag(option.rawValue)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 118)
+        }
+        .frame(maxWidth: 560)
     }
 
     private func toggleSortMode() {
@@ -162,7 +240,7 @@ struct ContentView: View {
 
         isCheckingPushes = true
 
-        let snapshot = store.items
+        let snapshot = store.items.filter { !$0.isArchived }
         let legacySevenDaysEnabled = pushSevenDaysEnabled
         let legacyDueDayEnabled = pushDueDayEnabled
 
@@ -213,7 +291,6 @@ struct ContentView: View {
     ) -> Set<Int> {
         var offsets = Set(item.reminderOffsets)
 
-        // Keep old global switches meaningful for existing users.
         if !legacySevenDaysEnabled {
             offsets.remove(7)
         }
@@ -283,5 +360,35 @@ struct ContentView: View {
     private func revealRecoveryBackup(for notice: DataRecoveryNotice) {
         guard let url = recoveryBackupURL(for: notice) else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
+    private func filterLabel(_ option: DashboardFilter) -> String {
+        switch option {
+        case .active: return text("active")
+        case .all: return text("all")
+        case .within30: return text("within30")
+        case .overdue: return text("overdue")
+        case .archived: return text("archived")
+        }
+    }
+
+    private func text(_ key: String) -> String {
+        let zh: [String: String] = [
+            "searchPlaceholder": "搜索名称、备注、分类或链接",
+            "active": "进行中",
+            "all": "全部",
+            "within30": "30天内",
+            "overdue": "已过期",
+            "archived": "归档",
+        ]
+        let en: [String: String] = [
+            "searchPlaceholder": "Search name, note, category, or link",
+            "active": "Active",
+            "all": "All",
+            "within30": "30 days",
+            "overdue": "Overdue",
+            "archived": "Archived",
+        ]
+        return language == .simplifiedChinese ? (zh[key] ?? en[key] ?? key) : (en[key] ?? key)
     }
 }
