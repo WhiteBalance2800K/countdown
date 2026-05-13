@@ -1,9 +1,11 @@
+import AppKit
 import ServiceManagement
 import SwiftUI
 
 struct PushSettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var store: ItemsStore
 
     @AppStorage("pushEnabled") private var pushEnabled: Bool = false
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
@@ -27,15 +29,18 @@ struct PushSettingsView: View {
             VStack(spacing: 0) {
                 header
 
-                VStack(spacing: 14) {
-                    languageSection
-                    launchAtLoginSection
-                    toggleRow
-                    addressField
-                    timingSection
-                    testSection
+                ScrollView {
+                    VStack(spacing: 14) {
+                        languageSection
+                        launchAtLoginSection
+                        toggleRow
+                        addressField
+                        timingSection
+                        dataSection
+                        testSection
+                    }
+                    .padding(18)
                 }
-                .padding(18)
 
                 footer
             }
@@ -50,7 +55,7 @@ struct PushSettingsView: View {
             )
             .padding(18)
         }
-        .frame(width: 430)
+        .frame(width: 430, height: 610)
         .onAppear {
             syncLaunchAtLoginStatus()
         }
@@ -217,6 +222,34 @@ struct PushSettingsView: View {
         }
     }
 
+    private var dataSection: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text(V06Text.text("data", language))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+            HStack(spacing: 10) {
+                Button {
+                    reveal(store.appSupportDirectoryURL())
+                } label: {
+                    Label(V06Text.text("openDataFolder", language), systemImage: "folder")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+
+                Button {
+                    reveal(store.backupsDirectoryURL())
+                } label: {
+                    Label(V06Text.text("openBackupFolder", language), systemImage: "clock.arrow.circlepath")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
     private var testSection: some View {
         HStack(spacing: 10) {
             Button {
@@ -285,6 +318,10 @@ struct PushSettingsView: View {
     private var fieldBorder: some View {
         RoundedRectangle(cornerRadius: 12, style: .continuous)
             .stroke(RadixPalette.border(colorScheme).opacity(0.46), lineWidth: 1)
+    }
+
+    private func reveal(_ url: URL) {
+        NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
     private func sendTestPush() {

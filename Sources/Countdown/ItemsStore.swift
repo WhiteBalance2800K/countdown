@@ -22,9 +22,14 @@ final class ItemsStore: ObservableObject {
         loadFromDisk()
     }
 
-    func add(name: String, expiryDate: Date) {
-        let item = CountdownItem(name: name.trimmingCharacters(in: .whitespacesAndNewlines), expiryDate: expiryDate)
-            .normalizedExpiryDate()
+    func add(name: String, expiryDate: Date, note: String = "", reminderOffsets: [Int] = CountdownItem.defaultReminderOffsets) {
+        let item = CountdownItem(
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            expiryDate: expiryDate,
+            note: note,
+            reminderOffsets: reminderOffsets
+        )
+        .normalizedExpiryDate()
         items.append(item)
         saveToDisk()
     }
@@ -83,6 +88,16 @@ final class ItemsStore: ObservableObject {
             items.append(item.normalizedExpiryDate())
             saveToDisk()
         }
+    }
+
+    func appSupportDirectoryURL() -> URL {
+        ensureDirExists()
+        return appSupportDir()
+    }
+
+    func backupsDirectoryURL() -> URL {
+        ensureBackupsDirExists()
+        return backupsDir()
     }
 
     private func appSupportDir() -> URL {
