@@ -10,8 +10,6 @@ struct ContentView: View {
     @AppStorage("sortMode") private var sortModeRaw: String = SortMode.remainingDays.rawValue
     @AppStorage("pushEnabled") private var pushEnabled: Bool = false
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
-    @AppStorage("pushSevenDaysEnabled") private var pushSevenDaysEnabled: Bool = true
-    @AppStorage("pushDueDayEnabled") private var pushDueDayEnabled: Bool = true
     @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
 
     @State private var now = Date()
@@ -20,8 +18,8 @@ struct ContentView: View {
     @State private var isCheckingPushes = false
     @State private var editingItem: CountdownItem?
     @State private var draggingItemID: UUID?
-    @State private var searchText = ""
     @State private var filterRaw = DashboardFilter.active.rawValue
+    @State private var categoryFilter = Self.allCategoriesFilterValue
 
     private enum SortMode: String {
         case remainingDays
@@ -41,9 +39,22 @@ struct ContentView: View {
     private var sortMode: SortMode { SortMode(rawValue: sortModeRaw) ?? .remainingDays }
     private var filter: DashboardFilter { DashboardFilter(rawValue: filterRaw) ?? .active }
 
+    private var categoryOptions: [String] {
+        let categories = store.items
+            .map { $0.category.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return Array(Set(categories)).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
     private var displayItems: [CountdownItem] {
         store.items.filter { item in
-            guard item.matchesSearch(searchText) else { return false }
+            let normalizedCategory = item.category.trimmingCharacters(in: .whitespacesAndNewlines)
+            if categoryFilter == Self.uncategorizedFilterValue {
+                guard normalizedCategory.isEmpty else { return false }
+            } else if categoryFilter != Self.allCategoriesFilterValue {
+                guard normalizedCategory == categoryFilter else { return false }
+            }
+
             let days = item.remainingDays(on: now)
             switch filter {
             case .active:
@@ -127,14 +138,8 @@ struct ContentView: View {
         .onChange(of: barkPushAddress) { _ in
             checkAndSendDuePushes()
         }
-        .onChange(of: pushSevenDaysEnabled) { _ in
-            checkAndSendDuePushes()
-        }
-        .onChange(of: pushDueDayEnabled) { _ in
-            checkAndSendDuePushes()
-        }
         .sheet(isPresented: $isAdding) {
-            ItemEditorView(mode: .add, initialItem: nil) { result in
+            ItemEditorView(mode: .add, initialItem: nil, categorySuggestions: categoryOptions) { result in
                 switch result {
                 case .cancel:
                     break
@@ -156,7 +161,7 @@ struct ContentView: View {
             }
         }
         .sheet(item: $editingItem) { item in
-            ItemEditorView(mode: .edit, initialItem: item) { result in
+            ItemEditorView(mode: .edit, initialItem: item, categorySuggestions: categoryOptions) { result in
                 switch result {
                 case .cancel:
                     break
@@ -189,26 +194,6 @@ struct ContentView: View {
 
     private var dashboardFilterBar: some View {
         HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(RadixPalette.faintText(colorScheme))
-
-                TextField(text("searchPlaceholder"), text: $searchText)
-                    .font(.system(size: 13))
-                    .textFieldStyle(.plain)
-            }
-            .padding(.horizontal, 12)
-            .frame(height: 38)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.62 : 0.76))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(RadixPalette.border(colorScheme).opacity(0.38), lineWidth: 1)
-            )
-
             Picker("", selection: $filterRaw) {
                 ForEach(DashboardFilter.allCases) { option in
                     Text(filterLabel(option)).tag(option.rawValue)
@@ -217,8 +202,30 @@ struct ContentView: View {
             .labelsHidden()
             .pickerStyle(.menu)
             .frame(width: 118)
+
+            Picker("", selection: $categoryFilter) {
+                Text(L10n.text("categoryFilterAll", language)).tag(Self.allCategoriesFilterValue)
+                if categoryOptions.contains(where: { !$0.isEmpty }) {
+                    Divider()
+                    ForEach(categoryOptions, id: \.self) { category in
+                        Text(category).tag(category)
+                    }
+                }
+                Divider()
+                Text(L10n.text("categoryFilterUncategorized", language)).tag(Self.uncategorizedFilterValue)
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 150)
         }
-        .frame(maxWidth: 560)
+        .frame(maxWidth: 310)
+        .onChange(of: categoryOptions) { options in
+            if categoryFilter != Self.allCategoriesFilterValue,
+               categoryFilter != Self.uncategorizedFilterValue,
+               !options.contains(categoryFilter) {
+                categoryFilter = Self.allCategoriesFilterValue
+            }
+        }
     }
 
     private func toggleSortMode() {
@@ -241,9 +248,6 @@ struct ContentView: View {
         isCheckingPushes = true
 
         let snapshot = store.items.filter { !$0.isArchived }
-        let legacySevenDaysEnabled = pushSevenDaysEnabled
-        let legacyDueDayEnabled = pushDueDayEnabled
-
         Task {
             var sentKeys = Set(UserDefaults.standard.stringArray(forKey: Self.sentReminderDefaultsKey) ?? [])
             let calendar = Calendar.current
@@ -254,11 +258,7 @@ struct ContentView: View {
                 let days = calendar.dateComponents([.day], from: today, to: expiry).day ?? 0
                 guard days >= 0 else { continue }
 
-                let offsets = effectiveReminderOffsets(
-                    for: item,
-                    legacySevenDaysEnabled: legacySevenDaysEnabled,
-                    legacyDueDayEnabled: legacyDueDayEnabled
-                )
+                let offsets = Set(item.reminderOffsets)
                 guard offsets.contains(days) else { continue }
 
                 let key = reminderKey(item: item, triggerDays: days, calendar: calendar)
@@ -282,23 +282,6 @@ struct ContentView: View {
                 isCheckingPushes = false
             }
         }
-    }
-
-    private func effectiveReminderOffsets(
-        for item: CountdownItem,
-        legacySevenDaysEnabled: Bool,
-        legacyDueDayEnabled: Bool
-    ) -> Set<Int> {
-        var offsets = Set(item.reminderOffsets)
-
-        if !legacySevenDaysEnabled {
-            offsets.remove(7)
-        }
-        if !legacyDueDayEnabled {
-            offsets.remove(0)
-        }
-
-        return offsets
     }
 
     private func reminderKey(item: CountdownItem, triggerDays: Int, calendar: Calendar) -> String {
@@ -364,31 +347,14 @@ struct ContentView: View {
 
     private func filterLabel(_ option: DashboardFilter) -> String {
         switch option {
-        case .active: return text("active")
-        case .all: return text("all")
-        case .within30: return text("within30")
-        case .overdue: return text("overdue")
-        case .archived: return text("archived")
+        case .active: return L10n.text("filterActive", language)
+        case .all: return L10n.text("filterAll", language)
+        case .within30: return L10n.text("filterWithin30", language)
+        case .overdue: return L10n.text("filterOverdue", language)
+        case .archived: return L10n.text("filterArchived", language)
         }
     }
 
-    private func text(_ key: String) -> String {
-        let zh: [String: String] = [
-            "searchPlaceholder": "搜索名称、备注、分类或链接",
-            "active": "进行中",
-            "all": "全部",
-            "within30": "30天内",
-            "overdue": "已过期",
-            "archived": "归档",
-        ]
-        let en: [String: String] = [
-            "searchPlaceholder": "Search name, note, category, or link",
-            "active": "Active",
-            "all": "All",
-            "within30": "30 days",
-            "overdue": "Overdue",
-            "archived": "Archived",
-        ]
-        return language == .simplifiedChinese ? (zh[key] ?? en[key] ?? key) : (en[key] ?? key)
-    }
+    private static let allCategoriesFilterValue = "__all_categories__"
+    private static let uncategorizedFilterValue = "__uncategorized__"
 }

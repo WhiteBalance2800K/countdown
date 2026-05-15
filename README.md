@@ -4,12 +4,12 @@ English | [简体中文](README.zh-CN.md)
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange)
-![Version](https://img.shields.io/badge/version-v0.8-green)
+![Version](https://img.shields.io/badge/version-v0.9-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 Countdown is a small local-first macOS SwiftUI app for tracking expiry dates, renewals, recurring reminders, and other time-sensitive items.
 
-Current version: `v0.8`
+Current version: `v0.9`
 
 [Download Latest Release](https://github.com/WhiteBalance2800K/countdown/releases)
 
@@ -25,12 +25,11 @@ Current version: `v0.8`
 - [x] Track expiry dates, renewals, deadlines, and recurring items.
 - [x] Add, edit, archive, restore, and delete countdown items.
 - [x] Enter an expiry date directly or by remaining days.
-- [x] Add notes, categories, and links to each countdown item.
-- [x] Set custom reminder offsets such as `30, 7, 1, 0` days before expiry.
+- [x] Add notes, category presets, custom categories, and links to each countdown item.
+- [x] Pick Bark reminder dates with quick choices or a calendar date.
 - [x] Use repeat rules for monthly, quarterly, yearly, or custom day intervals.
 - [x] Renew recurring countdown items with one click.
-- [x] Search by name, note, category, or link.
-- [x] Filter by active, all, 30-day, overdue, or archived items.
+- [x] Filter by active, all, 30-day, overdue, archived, and category.
 - [x] Archive completed items without deleting them.
 - [x] Compact card layout with color-coded ring progress.
 - [x] Manual drag ordering with arrange mode.
@@ -63,7 +62,7 @@ Countdown is useful for tracking:
 - [ ] Add more dashboard views, such as grouped-by-category and timeline views.
 - [ ] Add smarter recurring rules, such as every N months or custom weekdays.
 - [ ] Add batch editing for categories, reminder offsets, and archive status.
-- [ ] Add keyboard shortcuts for adding, searching, archiving, and arranging items.
+- [ ] Add keyboard shortcuts for adding, archiving, filtering, and arranging items.
 - [ ] Add stronger data recovery tools for damaged or manually edited data files.
 - [ ] Add automated tests for item storage, repeat rules, reminders, and backup recovery.
 
@@ -71,7 +70,7 @@ Countdown is useful for tracking:
 
 Download the latest app bundle from the [Releases](https://github.com/WhiteBalance2800K/countdown/releases) page.
 
-1. Download `Countdown-v0.8-macOS.zip`.
+1. Download `Countdown-v0.9-macOS.zip`.
 2. Unzip it.
 3. Move `Countdown.app` to `/Applications`.
 4. Open Countdown from Finder or Launchpad.
@@ -103,7 +102,7 @@ dist/Countdown.app
 The release archive is written to:
 
 ```text
-dist/Countdown-v0.8-macOS.zip
+dist/Countdown-v0.9-macOS.zip
 ```
 
 ## Bark Push Setup
@@ -118,13 +117,7 @@ https://api.day.app/your-key
 
 Countdown appends the notification title and body automatically.
 
-Each countdown item can define custom reminder offsets, for example:
-
-```text
-30, 7, 1, 0
-```
-
-This means Countdown can remind you 30 days, 7 days, 1 day, and 0 days before the item expires.
+Each countdown item can define Bark reminder dates. Use the quick buttons for common choices such as due day, 1 day before, 7 days before, or 30 days before. You can also pick a specific date from the calendar and add it to the item's reminder list.
 
 ## Data Storage & Privacy
 

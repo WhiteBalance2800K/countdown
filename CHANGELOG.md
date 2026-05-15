@@ -2,6 +2,14 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9
+
+- Removed the dashboard search field.
+- Added a top dashboard category filter next to the status filter.
+- Redesigned category editing with presets, existing categories, and custom category input.
+- Replaced raw comma-separated Bark reminder offsets with quick reminder choices and a calendar-date picker.
+- Cleaned up dashboard, editor, and settings language for the updated reminder and category flows.
+
 ## v0.8
 
 - Added category and link fields for each countdown item.

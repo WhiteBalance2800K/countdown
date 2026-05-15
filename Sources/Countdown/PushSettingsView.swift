@@ -9,8 +9,6 @@ struct PushSettingsView: View {
 
     @AppStorage("pushEnabled") private var pushEnabled: Bool = false
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
-    @AppStorage("pushSevenDaysEnabled") private var pushSevenDaysEnabled: Bool = true
-    @AppStorage("pushDueDayEnabled") private var pushDueDayEnabled: Bool = true
     @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
     @AppStorage("launchAtLoginEnabled") private var launchAtLoginEnabled: Bool = false
 
@@ -35,7 +33,7 @@ struct PushSettingsView: View {
                         launchAtLoginSection
                         toggleRow
                         addressField
-                        timingSection
+                        reminderInfoSection
                         dataSection
                         testSection
                     }
@@ -200,26 +198,26 @@ struct PushSettingsView: View {
         }
     }
 
-    private var timingSection: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            Text(L10n.text("pushTiming", language))
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(RadixPalette.faintText(colorScheme))
+    private var reminderInfoSection: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "calendar.badge.clock")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(RadixPalette.accentSolid(colorScheme))
+                .frame(width: 28, height: 28)
 
-            VStack(spacing: 8) {
-                SettingsCheckboxRow(
-                    title: L10n.text("sevenDaysBefore", language),
-                    subtitle: L10n.text("sevenDaysSubtitle", language),
-                    isOn: $pushSevenDaysEnabled
-                )
-
-                SettingsCheckboxRow(
-                    title: L10n.text("dueToday", language),
-                    subtitle: L10n.text("dueTodaySubtitle", language),
-                    isOn: $pushDueDayEnabled
-                )
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.text("reminderSettingsTitle", language))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(RadixPalette.text(colorScheme))
+                Text(L10n.text("reminderSettingsHelp", language))
+                    .font(.system(size: 11))
+                    .foregroundStyle(RadixPalette.faintText(colorScheme))
             }
+
+            Spacer(minLength: 0)
         }
+        .padding(12)
+        .background(settingsSurface)
     }
 
     private var dataSection: some View {
@@ -367,33 +365,6 @@ struct PushSettingsView: View {
         }
 
         launchAtLoginEnabled = SMAppService.mainApp.status == .enabled
-    }
-}
-
-private struct SettingsCheckboxRow: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let title: String
-    let subtitle: String
-    @Binding var isOn: Bool
-
-    var body: some View {
-        Toggle(isOn: $isOn) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(RadixPalette.text(colorScheme))
-                Text(subtitle)
-                    .font(.system(size: 11))
-                    .foregroundStyle(RadixPalette.faintText(colorScheme))
-            }
-        }
-        .toggleStyle(.checkbox)
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.56 : 0.68))
-        )
     }
 }
 

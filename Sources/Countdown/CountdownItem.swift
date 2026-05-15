@@ -86,15 +86,6 @@ struct CountdownItem: Identifiable, Codable, Equatable {
         return copy
     }
 
-    func matchesSearch(_ query: String) -> Bool {
-        let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty else { return true }
-        return name.localizedCaseInsensitiveContains(q)
-            || note.localizedCaseInsensitiveContains(q)
-            || category.localizedCaseInsensitiveContains(q)
-            || link.localizedCaseInsensitiveContains(q)
-    }
-
     func nextRenewedItem(from date: Date = Date(), calendar: Calendar = .current) -> CountdownItem? {
         guard let next = repeatRule.nextDate(after: max(expiryDate, date), calendar: calendar, customDays: repeatCustomDays) else {
             return nil

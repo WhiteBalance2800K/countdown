@@ -37,6 +37,7 @@ struct ItemEditorView: View {
 
     let mode: EditorMode
     let initialItem: CountdownItem?
+    let categorySuggestions: [String]
     let onDone: (EditorResult) -> Void
 
     @Environment(\.colorScheme) private var colorScheme
@@ -48,7 +49,8 @@ struct ItemEditorView: View {
     @State private var expiryDate: Date
     @State private var remainingDays: Int = 30
     @State private var note: String
-    @State private var reminderOffsetsText: String
+    @State private var reminderOffsets: Set<Int>
+    @State private var customReminderDate: Date
     @State private var category: String
     @State private var link: String
     @State private var isArchived: Bool
@@ -68,11 +70,41 @@ struct ItemEditorView: View {
         AppLanguage.current(from: appLanguageRaw)
     }
 
-    private var parsedReminderOffsets: [Int] {
-        let values = reminderOffsetsText
-            .split { $0 == "," || $0 == "，" || $0 == " " || $0 == "\n" || $0 == "\t" }
-            .compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
-        return CountdownItem.normalizedReminderOffsets(values)
+    private var normalizedReminderOffsets: [Int] {
+        CountdownItem.normalizedReminderOffsets(Array(reminderOffsets))
+    }
+
+    private var reminderQuickOffsets: [Int] {
+        [30, 14, 7, 3, 1, 0]
+    }
+
+    private var suggestedCategories: [String] {
+        let localizedDefaults = [
+            text("categorySubscription"),
+            text("categoryDocument"),
+            text("categoryDomain"),
+            text("categoryInsurance"),
+            text("categoryBill"),
+            text("categoryOther"),
+        ]
+        let merged = localizedDefaults + categorySuggestions
+        var seen = Set<String>()
+        return merged.compactMap { value in
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return nil }
+            let key = trimmed.lowercased()
+            guard !seen.contains(key) else { return nil }
+            seen.insert(key)
+            return trimmed
+        }
+    }
+
+    private var customReminderOffset: Int? {
+        let calendar = Calendar.current
+        let reminderDay = calendar.startOfDay(for: customReminderDate)
+        let expiryDay = calendar.startOfDay(for: finalExpiryDate)
+        guard reminderDay <= expiryDay else { return nil }
+        return calendar.dateComponents([.day], from: reminderDay, to: expiryDay).day
     }
 
     private var finalExpiryDate: Date {
@@ -91,15 +123,17 @@ struct ItemEditorView: View {
         ).day ?? 0
     }
 
-    init(mode: EditorMode, initialItem: CountdownItem?, onDone: @escaping (EditorResult) -> Void) {
+    init(mode: EditorMode, initialItem: CountdownItem?, categorySuggestions: [String] = [], onDone: @escaping (EditorResult) -> Void) {
         self.mode = mode
         self.initialItem = initialItem
+        self.categorySuggestions = categorySuggestions
         self.onDone = onDone
 
         _name = State(initialValue: initialItem?.name ?? "")
         _expiryDate = State(initialValue: initialItem?.expiryDate ?? Date())
         _note = State(initialValue: initialItem?.note ?? "")
-        _reminderOffsetsText = State(initialValue: (initialItem?.reminderOffsets ?? CountdownItem.defaultReminderOffsets).map(String.init).joined(separator: ", "))
+        _reminderOffsets = State(initialValue: Set(initialItem?.reminderOffsets ?? CountdownItem.defaultReminderOffsets))
+        _customReminderDate = State(initialValue: Date())
         _category = State(initialValue: initialItem?.category ?? "")
         _link = State(initialValue: initialItem?.link ?? "")
         _isArchived = State(initialValue: initialItem?.isArchived ?? false)
@@ -177,6 +211,9 @@ struct ItemEditorView: View {
             if newValue != clamped {
                 remainingDays = clamped
             }
+        }
+        .onChange(of: finalExpiryDate) { _ in
+            clampCustomReminderDate()
         }
         .onChange(of: repeatCustomDays) { newValue in
             repeatCustomDays = max(newValue, 1)
@@ -290,7 +327,45 @@ struct ItemEditorView: View {
     }
 
     private var categoryField: some View {
-        labeledTextField(title: text("category"), placeholder: text("categoryPlaceholder"), text: $category, systemImage: "tag")
+        VStack(alignment: .leading, spacing: 8) {
+            Text(text("category"))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                ForEach(suggestedCategories.prefix(9), id: \.self) { option in
+                    Button {
+                        category = option
+                    } label: {
+                        Label(option, systemImage: category == option ? "checkmark.circle.fill" : "tag")
+                            .font(.system(size: 11, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.76)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 34)
+                    }
+                    .buttonStyle(SelectableChipButtonStyle(
+                        colorScheme: colorScheme,
+                        isSelected: category == option
+                    ))
+                }
+            }
+
+            HStack(spacing: 9) {
+                Image(systemName: "square.and.pencil")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(RadixPalette.accentSolid(colorScheme))
+
+                TextField(text("categoryPlaceholder"), text: $category)
+                    .font(.system(size: 13))
+                    .textFieldStyle(.plain)
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 42)
+            .background(fieldBackground)
+            .overlay(fieldBorder)
+        }
     }
 
     private var linkField: some View {
@@ -320,22 +395,51 @@ struct ItemEditorView: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
 
-            HStack(spacing: 9) {
-                Image(systemName: "bell.badge")
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                ForEach(reminderQuickOffsets, id: \.self) { offset in
+                    Button {
+                        toggleReminderOffset(offset)
+                    } label: {
+                        Label(reminderOffsetLabel(offset), systemImage: reminderOffsets.contains(offset) ? "checkmark.circle.fill" : "bell")
+                            .font(.system(size: 11, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.76)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 34)
+                    }
+                    .buttonStyle(SelectableChipButtonStyle(
+                        colorScheme: colorScheme,
+                        isSelected: reminderOffsets.contains(offset)
+                    ))
+                }
+            }
+
+            HStack(spacing: 10) {
+                Image(systemName: "calendar.badge.plus")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(RadixPalette.accentSolid(colorScheme))
 
-                TextField("30, 7, 1, 0", text: $reminderOffsetsText)
-                    .font(.system(size: 13))
-                    .textFieldStyle(.plain)
-                    .lineLimit(1)
+                DatePicker("", selection: $customReminderDate, displayedComponents: [.date])
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+
+                Spacer(minLength: 0)
+
+                Button {
+                    addCustomReminderDate()
+                } label: {
+                    Label(L10n.text("reminderAddDate", language), systemImage: "plus")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .buttonStyle(CompactActionButtonStyle(colorScheme: colorScheme))
+                .disabled(customReminderOffset == nil)
             }
             .padding(.horizontal, 12)
             .frame(height: 42)
             .background(fieldBackground)
             .overlay(fieldBorder)
 
-            Text(String(format: L10n.text("customReminderOffsetsHelp", language), parsedReminderOffsets.map(String.init).joined(separator: ", ")))
+            Text(reminderSummaryText)
                 .font(.system(size: 10))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
                 .lineLimit(2)
@@ -533,10 +637,59 @@ struct ItemEditorView: View {
         }
     }
 
+    private var reminderSummaryText: String {
+        let dates = normalizedReminderOffsets.map { offset -> String in
+            let reminderDate = reminderDateString(for: offset)
+            return "\(reminderOffsetLabel(offset)) \(reminderDate)"
+        }.joined(separator: " · ")
+        return String(format: L10n.text("customReminderOffsetsHelp", language), dates)
+    }
+
+    private func reminderOffsetLabel(_ offset: Int) -> String {
+        if offset == 0 {
+            return L10n.text("reminderDueDay", language)
+        }
+        return String(format: L10n.text("reminderDaysBefore", language), offset)
+    }
+
+    private func reminderDateString(for offset: Int) -> String {
+        let calendar = Calendar.current
+        let date = calendar.date(byAdding: .day, value: -offset, to: finalExpiryDate) ?? finalExpiryDate
+        return DateFormatters.shortDateString(from: date, language: language)
+    }
+
+    private func toggleReminderOffset(_ offset: Int) {
+        if reminderOffsets.contains(offset), reminderOffsets.count > 1 {
+            reminderOffsets.remove(offset)
+        } else {
+            reminderOffsets.insert(offset)
+        }
+    }
+
+    private func addCustomReminderDate() {
+        guard let offset = customReminderOffset else { return }
+        reminderOffsets.insert(offset)
+    }
+
+    private func clampCustomReminderDate() {
+        let calendar = Calendar.current
+        let expiryDay = calendar.startOfDay(for: finalExpiryDate)
+        let current = calendar.startOfDay(for: customReminderDate)
+        if current > expiryDay {
+            customReminderDate = expiryDay
+        }
+    }
+
     private func text(_ key: String) -> String {
         let zh: [String: String] = [
             "category": "分类",
-            "categoryPlaceholder": "例如：订阅、证件、域名",
+            "categoryPlaceholder": "输入自定义分类",
+            "categorySubscription": "订阅",
+            "categoryDocument": "证件",
+            "categoryDomain": "域名",
+            "categoryInsurance": "保险",
+            "categoryBill": "账单",
+            "categoryOther": "其他",
             "link": "链接",
             "linkPlaceholder": "https://example.com",
             "repeat": "重复",
@@ -552,7 +705,13 @@ struct ItemEditorView: View {
         ]
         let en: [String: String] = [
             "category": "Category",
-            "categoryPlaceholder": "e.g. Subscription, Document, Domain",
+            "categoryPlaceholder": "Enter a custom category",
+            "categorySubscription": "Subscription",
+            "categoryDocument": "Document",
+            "categoryDomain": "Domain",
+            "categoryInsurance": "Insurance",
+            "categoryBill": "Bill",
+            "categoryOther": "Other",
             "link": "Link",
             "linkPlaceholder": "https://example.com",
             "repeat": "Repeat",
@@ -580,7 +739,7 @@ struct ItemEditorView: View {
             name: trimmedName,
             expiryDate: finalExpiryDate,
             note: trimmedNote,
-            reminderOffsets: parsedReminderOffsets,
+            reminderOffsets: normalizedReminderOffsets,
             category: category.trimmingCharacters(in: .whitespacesAndNewlines),
             link: link.trimmingCharacters(in: .whitespacesAndNewlines),
             isArchived: isArchived,
@@ -601,7 +760,9 @@ struct ItemEditorView: View {
             isArchived = false
             repeatRule = .none
             repeatCustomDays = 30
-            reminderOffsetsText = CountdownItem.defaultReminderOffsets.map(String.init).joined(separator: ", ")
+            reminderOffsets = Set(CountdownItem.defaultReminderOffsets)
+            customReminderDate = Date()
+            clampCustomReminderDate()
             return
         }
 
@@ -614,7 +775,10 @@ struct ItemEditorView: View {
         isArchived = initialItem.isArchived
         repeatRule = initialItem.repeatRule
         repeatCustomDays = initialItem.repeatCustomDays
-        reminderOffsetsText = initialItem.reminderOffsets.map(String.init).joined(separator: ", ")
+        reminderOffsets = Set(initialItem.reminderOffsets)
+        let firstReminderOffset = initialItem.reminderOffsets.first ?? 7
+        customReminderDate = Calendar.current.date(byAdding: .day, value: -firstReminderOffset, to: initialItem.expiryDate) ?? Date()
+        clampCustomReminderDate()
 
         if d < 0 {
             remainingDays = 0
@@ -676,6 +840,56 @@ private struct SegmentedDialogButtonStyle: ButtonStyle {
             return RadixPalette.subtleBackground(colorScheme)
         }
         return .clear
+    }
+}
+
+private struct SelectableChipButtonStyle: ButtonStyle {
+    let colorScheme: ColorScheme
+    let isSelected: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(isSelected ? RadixPalette.text(colorScheme) : RadixPalette.mutedText(colorScheme))
+            .padding(.horizontal, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(fill(configuration: configuration))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(isSelected ? RadixPalette.accentSolid(colorScheme).opacity(0.48) : RadixPalette.border(colorScheme).opacity(0.42), lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.14), value: isSelected)
+    }
+
+    private func fill(configuration: Configuration) -> Color {
+        if configuration.isPressed {
+            return RadixPalette.hoverBackground(colorScheme)
+        }
+        if isSelected {
+            return RadixPalette.accentElement(colorScheme)
+        }
+        return RadixPalette.appBackground(colorScheme)
+    }
+}
+
+private struct CompactActionButtonStyle: ButtonStyle {
+    let colorScheme: ColorScheme
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(isEnabled ? Color.white : RadixPalette.faintText(colorScheme))
+            .padding(.horizontal, 10)
+            .frame(height: 28)
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(isEnabled ? RadixPalette.accentSolid(colorScheme) : RadixPalette.elementBackground(colorScheme))
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
