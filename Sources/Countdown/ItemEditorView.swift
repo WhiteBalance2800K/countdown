@@ -50,7 +50,7 @@ struct ItemEditorView: View {
     @State private var remainingDays: Int = 30
     @State private var note: String
     @State private var reminderOffsets: Set<Int>
-    @State private var customReminderDate: Date
+    @State private var customReminderDays: Int
     @State private var category: String
     @State private var link: String
     @State private var isArchived: Bool
@@ -99,14 +99,6 @@ struct ItemEditorView: View {
         }
     }
 
-    private var customReminderOffset: Int? {
-        let calendar = Calendar.current
-        let reminderDay = calendar.startOfDay(for: customReminderDate)
-        let expiryDay = calendar.startOfDay(for: finalExpiryDate)
-        guard reminderDay <= expiryDay else { return nil }
-        return calendar.dateComponents([.day], from: reminderDay, to: expiryDay).day
-    }
-
     private var finalExpiryDate: Date {
         let cal = Calendar.current
         if inputMode == .date {
@@ -133,7 +125,7 @@ struct ItemEditorView: View {
         _expiryDate = State(initialValue: initialItem?.expiryDate ?? Date())
         _note = State(initialValue: initialItem?.note ?? "")
         _reminderOffsets = State(initialValue: Set(initialItem?.reminderOffsets ?? CountdownItem.defaultReminderOffsets))
-        _customReminderDate = State(initialValue: Date())
+        _customReminderDays = State(initialValue: initialItem?.reminderOffsets.first ?? 7)
         _category = State(initialValue: initialItem?.category ?? "")
         _link = State(initialValue: initialItem?.link ?? "")
         _isArchived = State(initialValue: initialItem?.isArchived ?? false)
@@ -162,7 +154,6 @@ struct ItemEditorView: View {
 
                         previewStrip
                         categoryField
-                        linkField
                         noteField
                         reminderOffsetsField
                         repeatRuleField
@@ -212,8 +203,11 @@ struct ItemEditorView: View {
                 remainingDays = clamped
             }
         }
-        .onChange(of: finalExpiryDate) { _ in
-            clampCustomReminderDate()
+        .onChange(of: customReminderDays) { newValue in
+            let clamped = clampDays(newValue)
+            if newValue != clamped {
+                customReminderDays = clamped
+            }
         }
         .onChange(of: repeatCustomDays) { newValue in
             repeatCustomDays = max(newValue, 1)
@@ -368,10 +362,6 @@ struct ItemEditorView: View {
         }
     }
 
-    private var linkField: some View {
-        labeledTextField(title: text("link"), placeholder: text("linkPlaceholder"), text: $link, systemImage: "link")
-    }
-
     private var noteField: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("note", language))
@@ -415,24 +405,37 @@ struct ItemEditorView: View {
             }
 
             HStack(spacing: 10) {
-                Image(systemName: "calendar.badge.plus")
+                Image(systemName: "bell.and.waves.left.and.right")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(RadixPalette.accentSolid(colorScheme))
 
-                DatePicker("", selection: $customReminderDate, displayedComponents: [.date])
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
+                dayAdjustButton(systemName: "minus", action: { customReminderDays = clampDays(customReminderDays - 1) })
+
+                TextField(L10n.text("daysMode", language), value: $customReminderDays, format: .number)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(RadixPalette.text(colorScheme))
+                    .multilineTextAlignment(.center)
+                    .textFieldStyle(.plain)
+                    .frame(width: 64)
+                    .onSubmit {
+                        customReminderDays = clampDays(customReminderDays)
+                    }
+
+                dayAdjustButton(systemName: "plus", action: { customReminderDays = clampDays(customReminderDays + 1) })
+
+                Text(L10n.text("reminderDaysUnit", language))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(RadixPalette.faintText(colorScheme))
 
                 Spacer(minLength: 0)
 
                 Button {
-                    addCustomReminderDate()
+                    addCustomReminderDays()
                 } label: {
                     Label(L10n.text("reminderAddDate", language), systemImage: "plus")
                         .font(.system(size: 11, weight: .semibold))
                 }
                 .buttonStyle(CompactActionButtonStyle(colorScheme: colorScheme))
-                .disabled(customReminderOffset == nil)
             }
             .padding(.horizontal, 12)
             .frame(height: 42)
@@ -500,29 +503,6 @@ struct ItemEditorView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.56 : 0.68))
         )
-    }
-
-    private func labeledTextField(title: String, placeholder: String, text: Binding<String>, systemImage: String) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(RadixPalette.faintText(colorScheme))
-
-            HStack(spacing: 9) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(RadixPalette.accentSolid(colorScheme))
-
-                TextField(placeholder, text: text)
-                    .font(.system(size: 13))
-                    .textFieldStyle(.plain)
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, 12)
-            .frame(height: 42)
-            .background(fieldBackground)
-            .overlay(fieldBorder)
-        }
     }
 
     private var previewStrip: some View {
@@ -666,18 +646,8 @@ struct ItemEditorView: View {
         }
     }
 
-    private func addCustomReminderDate() {
-        guard let offset = customReminderOffset else { return }
-        reminderOffsets.insert(offset)
-    }
-
-    private func clampCustomReminderDate() {
-        let calendar = Calendar.current
-        let expiryDay = calendar.startOfDay(for: finalExpiryDate)
-        let current = calendar.startOfDay(for: customReminderDate)
-        if current > expiryDay {
-            customReminderDate = expiryDay
-        }
+    private func addCustomReminderDays() {
+        reminderOffsets.insert(clampDays(customReminderDays))
     }
 
     private func text(_ key: String) -> String {
@@ -690,8 +660,6 @@ struct ItemEditorView: View {
             "categoryInsurance": "保险",
             "categoryBill": "账单",
             "categoryOther": "其他",
-            "link": "链接",
-            "linkPlaceholder": "https://example.com",
             "repeat": "重复",
             "none": "不重复",
             "monthly": "每月",
@@ -712,8 +680,6 @@ struct ItemEditorView: View {
             "categoryInsurance": "Insurance",
             "categoryBill": "Bill",
             "categoryOther": "Other",
-            "link": "Link",
-            "linkPlaceholder": "https://example.com",
             "repeat": "Repeat",
             "none": "None",
             "monthly": "Monthly",
@@ -761,8 +727,7 @@ struct ItemEditorView: View {
             repeatRule = .none
             repeatCustomDays = 30
             reminderOffsets = Set(CountdownItem.defaultReminderOffsets)
-            customReminderDate = Date()
-            clampCustomReminderDate()
+            customReminderDays = 7
             return
         }
 
@@ -776,9 +741,7 @@ struct ItemEditorView: View {
         repeatRule = initialItem.repeatRule
         repeatCustomDays = initialItem.repeatCustomDays
         reminderOffsets = Set(initialItem.reminderOffsets)
-        let firstReminderOffset = initialItem.reminderOffsets.first ?? 7
-        customReminderDate = Calendar.current.date(byAdding: .day, value: -firstReminderOffset, to: initialItem.expiryDate) ?? Date()
-        clampCustomReminderDate()
+        customReminderDays = initialItem.reminderOffsets.first ?? 7
 
         if d < 0 {
             remainingDays = 0

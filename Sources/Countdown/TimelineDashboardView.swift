@@ -451,14 +451,10 @@ private struct BottomBarButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 5) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 18, weight: .semibold))
-                Text(title)
-                    .font(.system(size: 10, weight: .semibold))
-            }
+            Image(systemName: systemImage)
+                .font(.system(size: 18, weight: .semibold))
             .foregroundStyle(isSelected ? .white : inactiveText)
-            .frame(width: 66, height: 48)
+            .frame(width: 48, height: 42)
             .background(
                 Group {
                     if isSelected {
@@ -473,6 +469,7 @@ private struct BottomBarButton: View {
             )
         }
         .buttonStyle(.plain)
+        .help(title)
     }
 
     private var selectedFill: some ShapeStyle {

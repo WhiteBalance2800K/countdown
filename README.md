@@ -1,147 +1,147 @@
 # Countdown
 
-English | [简体中文](README.zh-CN.md)
+[English](README.en.md) | 简体中文
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange)
-![Version](https://img.shields.io/badge/version-v0.9-green)
+![Version](https://img.shields.io/badge/version-v0.9.1-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-Countdown is a small local-first macOS SwiftUI app for tracking expiry dates, renewals, recurring reminders, and other time-sensitive items.
+Countdown 是一个本地优先的 macOS SwiftUI 倒计时工具，用来追踪到期日、续费日、重复提醒和其他需要提前关注的时间节点。
 
-Current version: `v0.9`
+当前版本：`v0.9.1`
 
-[Download Latest Release](https://github.com/WhiteBalance2800K/countdown/releases)
+[下载最新版本](https://github.com/WhiteBalance2800K/countdown/releases)
 
-## Screenshots
+## 截图
 
 <p align="center">
-  <img src="Resources/screenshot-dashboard.png" alt="Countdown dashboard" width="45%">
-  <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
+  <img src="Resources/screenshot-dashboard.png" alt="Countdown 主界面" width="45%">
+  <img src="Resources/screenshot-settings.png" alt="Countdown 设置界面" width="45%">
 </p>
 
-## Features
+## 功能特性
 
-- [x] Track expiry dates, renewals, deadlines, and recurring items.
-- [x] Add, edit, archive, restore, and delete countdown items.
-- [x] Enter an expiry date directly or by remaining days.
-- [x] Add notes, category presets, custom categories, and links to each countdown item.
-- [x] Pick Bark reminder dates with quick choices or a calendar date.
-- [x] Use repeat rules for monthly, quarterly, yearly, or custom day intervals.
-- [x] Renew recurring countdown items with one click.
-- [x] Filter by active, all, 30-day, overdue, archived, and category.
-- [x] Archive completed items without deleting them.
-- [x] Compact card layout with color-coded ring progress.
-- [x] Manual drag ordering with arrange mode.
-- [x] One-click ordering by nearest or farthest expiry date.
-- [x] Native light and dark mode support.
-- [x] Language switcher with 10 app languages.
-- [x] Optional Bark push reminders.
-- [x] Menu bar entry with nearest due items and quick actions.
-- [x] Optional launch at login.
-- [x] Local-first persistence with no account required.
+- [x] 追踪到期日、续费日、deadline 和周期性事项。
+- [x] 新增、编辑、归档、恢复和删除倒计时项目。
+- [x] 支持直接选择到期日期，也支持按剩余天数录入。
+- [x] 每个倒计时项目支持备注、分类预设和自定义分类。
+- [x] 支持用快捷按钮、加减按钮或数字输入设置 Bark 提醒日期。
+- [x] 支持按月、按季度、按年或自定义天数重复。
+- [x] 支持一键续期周期性项目。
+- [x] 支持按活跃、全部、30 天内、已过期、已归档和分类筛选。
+- [x] 支持归档已完成项目，不必直接删除。
+- [x] 紧凑卡片布局，使用圆环和颜色表达紧迫程度。
+- [x] 支持手动拖拽排序，并提供轻量调整模式。
+- [x] 支持一键按临近或较远到期日排序。
+- [x] 跟随 macOS 深色/浅色模式。
+- [x] 设置页支持 10 种语言切换，并提供 GitHub 与反馈入口。
+- [x] 可选 Bark 推送提醒。
+- [x] 支持菜单栏临近到期列表和快速入口。
+- [x] 支持登录 macOS 后自动启动。
+- [x] 本地优先，不需要账号，核心数据保存在本机。
 
-## Use Cases
+## 适用场景
 
-Countdown is useful for tracking:
+Countdown 适合追踪：
 
-- subscription renewals
-- domain and certificate expiry dates
-- warranty and insurance deadlines
-- membership renewals
-- personal deadlines
-- recurring reminders
-- items that should not be forgotten before they expire
+- 订阅续费
+- 域名、证书到期
+- 质保、保险期限
+- 会员续费
+- 个人 deadline
+- 周期性提醒事项
+- 任何到期前不应忘记的事项
 
 ## Roadmap / Todo
 
-- [ ] Add native macOS notifications as an alternative to Bark push.
-- [ ] Add iCloud sync or optional file-based sync for users with multiple Macs.
-- [ ] Add import and export support for JSON or CSV files.
-- [ ] Add calendar export support, such as `.ics` files.
-- [ ] Add more dashboard views, such as grouped-by-category and timeline views.
-- [ ] Add smarter recurring rules, such as every N months or custom weekdays.
-- [ ] Add batch editing for categories, reminder offsets, and archive status.
-- [ ] Add keyboard shortcuts for adding, archiving, filtering, and arranging items.
-- [ ] Add stronger data recovery tools for damaged or manually edited data files.
-- [ ] Add automated tests for item storage, repeat rules, reminders, and backup recovery.
+- [ ] 增加 macOS 原生通知，作为 Bark 推送之外的提醒方式。
+- [ ] 增加 iCloud 同步或基于文件的可选同步，方便多台 Mac 使用。
+- [ ] 增加 JSON 或 CSV 导入导出功能。
+- [ ] 增加日历导出支持，例如 `.ics` 文件。
+- [ ] 增加更多看板视图，例如按分类分组视图和时间线视图。
+- [ ] 增强重复规则，例如每 N 个月、指定星期几等。
+- [ ] 增加批量编辑功能，用于批量修改分类、提醒天数和归档状态。
+- [ ] 增加键盘快捷键，用于新增、归档、筛选和调整排序。
+- [ ] 增强数据恢复工具，处理损坏或手动编辑后的数据文件。
+- [ ] 增加自动化测试，覆盖数据存储、重复规则、提醒和备份恢复。
 
-## Download
+## 下载使用
 
-Download the latest app bundle from the [Releases](https://github.com/WhiteBalance2800K/countdown/releases) page.
+从 [Releases](https://github.com/WhiteBalance2800K/countdown/releases) 页面下载最新版本。
 
-1. Download `Countdown-v0.9-macOS.zip`.
-2. Unzip it.
-3. Move `Countdown.app` to `/Applications`.
-4. Open Countdown from Finder or Launchpad.
+1. 下载 `Countdown-v0.9.1-macOS.zip`。
+2. 解压文件。
+3. 将 `Countdown.app` 移动到“应用程序”文件夹。
+4. 从 Finder 或启动台打开 Countdown。
 
-## Requirements
+## 环境要求
 
-- macOS 13 or later
-- Swift 6.2 or later, only required when building from source
+- macOS 13 或更高版本
+- Swift 6.2 或更高版本，仅从源码构建时需要
 
-## Run From Source
+## 从源码运行
 
 ```bash
 swift run
 ```
 
-## Build The App Bundle
+## 构建 App
 
 ```bash
 bash scripts/build_app.sh
 open dist/Countdown.app
 ```
 
-The generated app bundle is written to:
+生成的 App 位于：
 
 ```text
 dist/Countdown.app
 ```
 
-The release archive is written to:
+Release 压缩包位于：
 
 ```text
-dist/Countdown-v0.9-macOS.zip
+dist/Countdown-v0.9.1-macOS.zip
 ```
 
-## Bark Push Setup
+## Bark 推送设置
 
-1. Install Bark on your iPhone and copy your Bark push URL.
-2. Open Countdown settings.
-3. Paste a URL like:
+1. 在 iPhone 上安装 Bark，并复制 Bark 推送地址。
+2. 打开 Countdown 设置。
+3. 填入类似下面的地址：
 
 ```text
 https://api.day.app/your-key
 ```
 
-Countdown appends the notification title and body automatically.
+Countdown 会自动在地址后追加通知标题和内容。
 
-Each countdown item can define Bark reminder dates. Use the quick buttons for common choices such as due day, 1 day before, 7 days before, or 30 days before. You can also pick a specific date from the calendar and add it to the item's reminder list.
+每个倒计时项目都可以单独设置 Bark 提醒日期。常用日期可以直接点选，例如到期当天、提前 1 天、提前 7 天或提前 30 天；自定义日期可以用加减按钮或数字输入设置提前天数。
 
-## Data Storage & Privacy
+## 数据存储与隐私
 
-Countdown keeps user data outside the source tree:
+Countdown 会把用户数据保存在源码目录之外：
 
-- Countdown items: `~/Library/Application Support/Countdown/items.json`
-- Data backups: `~/Library/Application Support/Countdown/backups/`
-- UI, language, and push preferences: macOS `UserDefaults` via SwiftUI `@AppStorage`
-- Launch at login: macOS Login Items through `SMAppService`
+- 倒计时项目：`~/Library/Application Support/Countdown/items.json`
+- 倒计时数据备份：`~/Library/Application Support/Countdown/backups/`
+- UI、语言和推送偏好：通过 SwiftUI `@AppStorage` 写入 macOS `UserDefaults`
+- 开机启动：通过 macOS 登录项 `SMAppService` 管理
 
-Countdown does not require an account for core usage. Bark push is optional. The repository does not include personal countdown data. Local backups and build outputs are excluded by `.gitignore`.
+Countdown 的核心功能不需要账号。Bark 推送是可选功能。仓库不会包含个人倒计时数据。本地备份和构建产物已通过 `.gitignore` 排除。
 
-## Project Structure
+## 项目结构
 
 ```text
-Sources/Countdown/        SwiftUI app source
-Resources/                App icon and public screenshots
-scripts/build_app.sh      Local .app bundle build script
+Sources/Countdown/        SwiftUI 应用源码
+Resources/                App 图标和公开截图
+scripts/build_app.sh      本地 .app 打包脚本
 ```
 
-## Changelog
+## 更新日志
 
-See [CHANGELOG.md](CHANGELOG.md).
+见 [CHANGELOG.md](CHANGELOG.md)。
 
-## License
+## 许可证
 
-MIT. See [LICENSE](LICENSE).
+MIT。见 [LICENSE](LICENSE)。

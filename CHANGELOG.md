@@ -2,6 +2,15 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9.1
+
+- Replaced the Bark custom reminder calendar picker with plus, minus, and number input controls.
+- Removed the link field from the item editor card while preserving existing stored link data.
+- Simplified the bottom dashboard controls to icon-only buttons with hover help.
+- Kept the Settings language row label as "Language" for every selected app language.
+- Added Settings buttons for the GitHub repository and feedback issue page.
+- Made the GitHub default README Chinese and moved the English README to `README.en.md`.
+
 ## v0.9
 
 - Removed the dashboard search field.

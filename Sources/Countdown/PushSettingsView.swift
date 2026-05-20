@@ -35,6 +35,7 @@ struct PushSettingsView: View {
                         addressField
                         reminderInfoSection
                         dataSection
+                        projectSection
                         testSection
                     }
                     .padding(18)
@@ -147,7 +148,7 @@ struct PushSettingsView: View {
     private var languageSection: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.text("language", language))
+                Text("Language")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(RadixPalette.text(colorScheme))
                 Text(language.nativeName)
@@ -248,6 +249,34 @@ struct PushSettingsView: View {
         }
     }
 
+    private var projectSection: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text(L10n.text("projectLinks", language))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(RadixPalette.faintText(colorScheme))
+
+            HStack(spacing: 10) {
+                Button {
+                    openWeb("https://github.com/WhiteBalance2800K/countdown")
+                } label: {
+                    Label(L10n.text("openGitHub", language), systemImage: "chevron.left.forwardslash.chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+
+                Button {
+                    openWeb("https://github.com/WhiteBalance2800K/countdown/issues/new")
+                } label: {
+                    Label(L10n.text("feedbackIssue", language), systemImage: "exclamationmark.bubble")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
     private var testSection: some View {
         HStack(spacing: 10) {
             Button {
@@ -320,6 +349,11 @@ struct PushSettingsView: View {
 
     private func reveal(_ url: URL) {
         NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
+    private func openWeb(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        NSWorkspace.shared.open(url)
     }
 
     private func sendTestPush() {
