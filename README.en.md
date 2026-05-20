@@ -16,7 +16,7 @@ Current version: `v0.9.2`
 ## Screenshots
 
 <p align="center">
-  <img src="Resources/screenshot-dashboard.png" alt="Countdown dashboard" width="45%">
+  <img src="Resources/dashboard.png" alt="Countdown dashboard" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown settings" width="45%">
 </p>
 
