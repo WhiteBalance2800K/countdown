@@ -265,14 +265,20 @@ struct ContentView: View {
             Button {
                 enterImmersiveMode()
             } label: {
-                Image(systemName: "circle.dashed")
-                    .font(.system(size: 13, weight: .semibold))
-                    .frame(width: 34, height: 34)
+                HStack(spacing: 5) {
+                    Image(systemName: "circle.dashed")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text(L10n.text("immersiveMode", language))
+                        .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
+                }
+                .frame(height: 34)
+                .padding(.horizontal, 10)
             }
             .buttonStyle(PinFilterButtonStyle(colorScheme: colorScheme, isSelected: false))
             .help(L10n.text("immersiveMode", language))
         }
-        .frame(maxWidth: 398)
+        .frame(maxWidth: 470)
         .onChange(of: categoryOptions) { options in
             if categoryFilter != Self.allCategoriesFilterValue,
                categoryFilter != Self.uncategorizedFilterValue,
@@ -302,6 +308,7 @@ struct ContentView: View {
                 window.isOpaque = !isImmersiveMode
                 window.backgroundColor = isImmersiveMode ? .clear : .windowBackgroundColor
                 window.hasShadow = !isImmersiveMode
+                window.isMovableByWindowBackground = isImmersiveMode
 
                 window.standardWindowButton(.closeButton)?.isHidden = isImmersiveMode
                 window.standardWindowButton(.miniaturizeButton)?.isHidden = isImmersiveMode
@@ -539,6 +546,7 @@ private struct ImmersiveDashboardView: View {
 
 private struct ImmersiveRingItem: View {
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
     @State private var isHovering = false
 
     let item: CountdownItem
@@ -575,11 +583,15 @@ private struct ImmersiveRingItem: View {
         .padding(4)
         .scaleEffect(isHovering ? 1.10 : 1)
         .contentShape(Circle())
-        .help(item.name)
+        .help(hoverText)
         .onHover { hovering in
             isHovering = hovering
         }
         .animation(.interpolatingSpring(stiffness: 210, damping: 20), value: isHovering)
+    }
+
+    private var hoverText: String {
+        "\(item.name) · \(L10n.daysValue(remainingDays, AppLanguage.current(from: appLanguageRaw)))"
     }
 }
 

@@ -2,6 +2,13 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9.4
+
+- Fixed the Settings language row so the visible label is always `Language` and the appearance controls use normal compact sizing.
+- Made the main dashboard immersive-mode button explicit with both icon and text.
+- Improved immersive-mode hover help to show the item name and remaining days.
+- Made the transparent immersive-mode window movable by dragging its background.
+
 ## v0.9.3
 
 - Fixed custom Bark reminders so every selected reminder day can be removed, including custom days.

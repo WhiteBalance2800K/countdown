@@ -148,11 +148,9 @@ struct PushSettingsView: View {
 
     private var languageAppearanceSection: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Language")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(RadixPalette.text(colorScheme))
-            }
+            Text("Language")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(RadixPalette.text(colorScheme))
 
             Picker("", selection: $appLanguageRaw) {
                 ForEach(AppLanguage.allCases) { option in
@@ -161,15 +159,10 @@ struct PushSettingsView: View {
             }
             .labelsHidden()
             .pickerStyle(.menu)
-            .frame(width: 158)
+            .controlSize(.small)
+            .frame(width: 118)
 
             Spacer(minLength: 0)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.text("appearance", language))
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(RadixPalette.text(colorScheme))
-            }
 
             Picker("", selection: $appAppearanceModeRaw) {
                 ForEach(AppAppearanceMode.allCases) { option in
@@ -178,9 +171,11 @@ struct PushSettingsView: View {
             }
             .labelsHidden()
             .pickerStyle(.segmented)
-            .frame(width: 156)
+            .controlSize(.small)
+            .frame(width: 126)
         }
-        .padding(12)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(settingsSurface)
     }
 
