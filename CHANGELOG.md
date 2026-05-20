@@ -2,6 +2,14 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9.3
+
+- Fixed custom Bark reminders so every selected reminder day can be removed, including custom days.
+- Allowed per-item Bark reminder lists to be empty.
+- Combined Language and Appearance into a single compact Settings row.
+- Added immersive mode with transparent window presentation, ring-only content, hover item names, and a visible exit control.
+- Added smooth spring transitions and animated window resizing when entering or leaving immersive mode.
+
 ## v0.9.2
 
 - Added manual appearance selection for system, light, and dark modes.

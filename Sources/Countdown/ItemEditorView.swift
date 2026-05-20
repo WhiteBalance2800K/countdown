@@ -405,6 +405,8 @@ struct ItemEditorView: View {
                 }
             }
 
+            selectedReminderOffsetsField
+
             HStack(spacing: 10) {
                 Image(systemName: "bell.and.waves.left.and.right")
                     .font(.system(size: 13, weight: .semibold))
@@ -455,6 +457,40 @@ struct ItemEditorView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
                 .lineLimit(2)
+        }
+    }
+
+    private var selectedReminderOffsetsField: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+            if normalizedReminderOffsets.isEmpty {
+                Text(L10n.text("reminderNone", language))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(RadixPalette.faintText(colorScheme))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 32)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(RadixPalette.appBackground(colorScheme))
+                    )
+            } else {
+                ForEach(normalizedReminderOffsets, id: \.self) { offset in
+                    Button {
+                        reminderOffsets.remove(offset)
+                    } label: {
+                        Label(reminderOffsetLabel(offset), systemImage: "xmark.circle.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.76)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 32)
+                    }
+                    .buttonStyle(SelectableChipButtonStyle(
+                        colorScheme: colorScheme,
+                        isSelected: false
+                    ))
+                    .help(L10n.text("reminderRemove", language))
+                }
+            }
         }
     }
 
@@ -627,6 +663,9 @@ struct ItemEditorView: View {
     }
 
     private var reminderSummaryText: String {
+        guard !normalizedReminderOffsets.isEmpty else {
+            return L10n.text("reminderNoneHelp", language)
+        }
         let dates = normalizedReminderOffsets.map { offset -> String in
             let reminderDate = reminderDateString(for: offset)
             return "\(reminderOffsetLabel(offset)) \(reminderDate)"
@@ -648,7 +687,7 @@ struct ItemEditorView: View {
     }
 
     private func toggleReminderOffset(_ offset: Int) {
-        if reminderOffsets.contains(offset), reminderOffsets.count > 1 {
+        if reminderOffsets.contains(offset) {
             reminderOffsets.remove(offset)
         } else {
             reminderOffsets.insert(offset)

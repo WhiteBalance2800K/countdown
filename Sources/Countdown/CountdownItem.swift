@@ -101,8 +101,7 @@ struct CountdownItem: Identifiable, Codable, Equatable {
 
     static func normalizedReminderOffsets(_ offsets: [Int]) -> [Int] {
         let normalized = Set(offsets.map { min(max($0, 0), 3650) })
-        let sorted = normalized.sorted(by: >)
-        return sorted.isEmpty ? defaultReminderOffsets : sorted
+        return normalized.sorted(by: >)
     }
 
     enum CodingKeys: String, CodingKey {

@@ -30,8 +30,7 @@ struct PushSettingsView: View {
 
                 ScrollView {
                     VStack(spacing: 14) {
-                        languageSection
-                        appearanceSection
+                        languageAppearanceSection
                         launchAtLoginSection
                         toggleRow
                         addressField
@@ -147,18 +146,13 @@ struct PushSettingsView: View {
         .background(settingsSurface)
     }
 
-    private var languageSection: some View {
+    private var languageAppearanceSection: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Language")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(RadixPalette.text(colorScheme))
-                Text(language.nativeName)
-                    .font(.system(size: 11))
-                    .foregroundStyle(RadixPalette.faintText(colorScheme))
             }
-
-            Spacer()
 
             Picker("", selection: $appLanguageRaw) {
                 ForEach(AppLanguage.allCases) { option in
@@ -168,23 +162,14 @@ struct PushSettingsView: View {
             .labelsHidden()
             .pickerStyle(.menu)
             .frame(width: 158)
-        }
-        .padding(12)
-        .background(settingsSurface)
-    }
 
-    private var appearanceSection: some View {
-        HStack(spacing: 12) {
+            Spacer(minLength: 0)
+
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.text("appearance", language))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(RadixPalette.text(colorScheme))
-                Text(L10n.text("appearanceHelp", language))
-                    .font(.system(size: 11))
-                    .foregroundStyle(RadixPalette.faintText(colorScheme))
             }
-
-            Spacer()
 
             Picker("", selection: $appAppearanceModeRaw) {
                 ForEach(AppAppearanceMode.allCases) { option in
@@ -193,7 +178,7 @@ struct PushSettingsView: View {
             }
             .labelsHidden()
             .pickerStyle(.segmented)
-            .frame(width: 178)
+            .frame(width: 156)
         }
         .padding(12)
         .background(settingsSurface)

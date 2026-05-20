@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 import SwiftUI
 
 struct ContentView: View {
@@ -12,6 +13,7 @@ struct ContentView: View {
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
     @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
     @AppStorage("isAlwaysOnTop") private var isAlwaysOnTop: Bool = false
+    @AppStorage("isImmersiveMode") private var isImmersiveMode: Bool = false
 
     @State private var now = Date()
     @State private var isAdding = false
@@ -78,37 +80,28 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            SoftBackground()
-
-            VStack(spacing: 0) {
-                dashboardFilterBar
-                    .padding(.horizontal, 18)
-                    .padding(.top, 16)
-
-                SoftDashboardView(
+            if isImmersiveMode {
+                ImmersiveDashboardView(
                     items: displayItems,
                     now: now,
-                    isManualOrder: sortMode == .manual,
-                    store: store,
-                    draggingItemID: $draggingItemID,
-                    onEdit: { editingItem = $0 },
-                    onDelete: { store.remove($0) }
+                    onExit: exitImmersiveMode
                 )
+                .transition(.scale(scale: 0.84).combined(with: .opacity))
+            } else {
+                normalDashboard
+                    .transition(.scale(scale: 1.08).combined(with: .opacity))
             }
-
-            FloatingDashboardControls(
-                sortAscending: sortAscending,
-                isManualOrder: sortMode == .manual,
-                onToggleMode: toggleSortMode,
-                onToggleSort: toggleSortDirection,
-                onAdd: { isAdding = true },
-                onSettings: { isShowingSettings = true }
-            )
-            .padding(.bottom, 22)
         }
-        .frame(minWidth: 375, idealWidth: 760, minHeight: 500, idealHeight: 650)
+        .background(Color.clear)
+        .frame(
+            minWidth: isImmersiveMode ? 160 : 375,
+            idealWidth: isImmersiveMode ? 260 : 760,
+            minHeight: isImmersiveMode ? 120 : 500,
+            idealHeight: isImmersiveMode ? 280 : 650
+        )
+        .animation(.interpolatingSpring(stiffness: 170, damping: 22), value: isImmersiveMode)
         .onAppear {
-            updateWindowLevel()
+            updateWindowPresentation(animated: false)
             checkAndSendDuePushes()
         }
         .onChange(of: scenePhase) { newValue in
@@ -141,7 +134,10 @@ struct ContentView: View {
             checkAndSendDuePushes()
         }
         .onChange(of: isAlwaysOnTop) { _ in
-            updateWindowLevel()
+            updateWindowPresentation()
+        }
+        .onChange(of: isImmersiveMode) { _ in
+            updateWindowPresentation()
         }
         .sheet(isPresented: $isAdding) {
             ItemEditorView(mode: .add, initialItem: nil, categorySuggestions: categoryOptions) { result in
@@ -197,6 +193,38 @@ struct ContentView: View {
         }
     }
 
+    private var normalDashboard: some View {
+        ZStack(alignment: .bottom) {
+            SoftBackground()
+
+            VStack(spacing: 0) {
+                dashboardFilterBar
+                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+
+                SoftDashboardView(
+                    items: displayItems,
+                    now: now,
+                    isManualOrder: sortMode == .manual,
+                    store: store,
+                    draggingItemID: $draggingItemID,
+                    onEdit: { editingItem = $0 },
+                    onDelete: { store.remove($0) }
+                )
+            }
+
+            FloatingDashboardControls(
+                sortAscending: sortAscending,
+                isManualOrder: sortMode == .manual,
+                onToggleMode: toggleSortMode,
+                onToggleSort: toggleSortDirection,
+                onAdd: { isAdding = true },
+                onSettings: { isShowingSettings = true }
+            )
+            .padding(.bottom, 22)
+        }
+    }
+
     private var dashboardFilterBar: some View {
         HStack(spacing: 10) {
             Picker("", selection: $filterRaw) {
@@ -225,7 +253,7 @@ struct ContentView: View {
 
             Button {
                 isAlwaysOnTop.toggle()
-                updateWindowLevel()
+                updateWindowPresentation()
             } label: {
                 Image(systemName: isAlwaysOnTop ? "pin.fill" : "pin")
                     .font(.system(size: 13, weight: .semibold))
@@ -233,8 +261,18 @@ struct ContentView: View {
             }
             .buttonStyle(PinFilterButtonStyle(colorScheme: colorScheme, isSelected: isAlwaysOnTop))
             .help(L10n.text("pinOnTop", language))
+
+            Button {
+                enterImmersiveMode()
+            } label: {
+                Image(systemName: "circle.dashed")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 34, height: 34)
+            }
+            .buttonStyle(PinFilterButtonStyle(colorScheme: colorScheme, isSelected: false))
+            .help(L10n.text("immersiveMode", language))
         }
-        .frame(maxWidth: 354)
+        .frame(maxWidth: 398)
         .onChange(of: categoryOptions) { options in
             if categoryFilter != Self.allCategoriesFilterValue,
                categoryFilter != Self.uncategorizedFilterValue,
@@ -244,11 +282,60 @@ struct ContentView: View {
         }
     }
 
-    private func updateWindowLevel() {
+    private func enterImmersiveMode() {
+        withAnimation(.interpolatingSpring(stiffness: 170, damping: 22)) {
+            isImmersiveMode = true
+        }
+    }
+
+    private func exitImmersiveMode() {
+        withAnimation(.interpolatingSpring(stiffness: 170, damping: 22)) {
+            isImmersiveMode = false
+        }
+    }
+
+    private func updateWindowPresentation(animated: Bool = true) {
         DispatchQueue.main.async {
             for window in NSApp.windows {
+                guard window.sheetParent == nil else { continue }
                 window.level = isAlwaysOnTop ? .floating : .normal
+                window.isOpaque = !isImmersiveMode
+                window.backgroundColor = isImmersiveMode ? .clear : .windowBackgroundColor
+                window.hasShadow = !isImmersiveMode
+
+                window.standardWindowButton(.closeButton)?.isHidden = isImmersiveMode
+                window.standardWindowButton(.miniaturizeButton)?.isHidden = isImmersiveMode
+                window.standardWindowButton(.zoomButton)?.isHidden = isImmersiveMode
+
+                let targetSize = isImmersiveMode
+                    ? NSSize(width: 260, height: min(max(150, displayItemsHeightEstimate), 420))
+                    : NSSize(width: max(window.frame.width, 760), height: max(window.frame.height, 650))
+                resize(window: window, to: targetSize, animated: animated)
             }
+        }
+    }
+
+    private var displayItemsHeightEstimate: CGFloat {
+        let rows = ceil(Double(max(displayItems.count, 1)) / 3.0)
+        return CGFloat(rows) * 68 + 80
+    }
+
+    private func resize(window: NSWindow, to size: NSSize, animated: Bool) {
+        var frame = window.frame
+        let oldMidX = frame.midX
+        let oldMidY = frame.midY
+        frame.size = size
+        frame.origin.x = oldMidX - size.width / 2
+        frame.origin.y = oldMidY - size.height / 2
+
+        if animated {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.42
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                window.animator().setFrame(frame, display: true)
+            }
+        } else {
+            window.setFrame(frame, display: true)
         }
     }
 
@@ -407,5 +494,106 @@ private struct PinFilterButtonStyle: ButtonStyle {
             return RadixPalette.hoverBackground(colorScheme)
         }
         return RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.62 : 0.76)
+    }
+}
+
+private struct ImmersiveDashboardView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
+
+    let items: [CountdownItem]
+    let now: Date
+    let onExit: () -> Void
+
+    private var language: AppLanguage {
+        AppLanguage.current(from: appLanguageRaw)
+    }
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            LazyVGrid(columns: columns, spacing: 14) {
+                ForEach(items) { item in
+                    ImmersiveRingItem(item: item, now: now)
+                        .transition(.scale(scale: 0.72).combined(with: .opacity))
+                }
+            }
+            .padding(20)
+            .animation(.interpolatingSpring(stiffness: 190, damping: 24), value: items.map(\.id))
+
+            Button(action: onExit) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(ImmersiveExitButtonStyle(colorScheme: colorScheme))
+            .help(L10n.text("exitImmersive", language))
+            .padding(4)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.fixed(54), spacing: 14), count: min(max(items.count, 1), 3))
+    }
+}
+
+private struct ImmersiveRingItem: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isHovering = false
+
+    let item: CountdownItem
+    let now: Date
+
+    private var remainingDays: Int {
+        item.remainingDays(on: now)
+    }
+
+    private var progress: Double {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: item.createdAt)
+        let end = calendar.startOfDay(for: item.expiryDate)
+        let today = calendar.startOfDay(for: now)
+        let totalDays = max(calendar.dateComponents([.day], from: start, to: end).day ?? 1, 1)
+        let remaining = max(calendar.dateComponents([.day], from: today, to: end).day ?? 0, 0)
+        return min(max(Double(remaining) / Double(totalDays), 0), 1)
+    }
+
+    private var urgency: UrgencyBand {
+        UrgencyBand(days: remainingDays)
+    }
+
+    var body: some View {
+        RingView(
+            progress: progress,
+            color: urgency.color(colorScheme),
+            lineWidth: 7,
+            trackColor: RadixPalette.border(colorScheme).opacity(0.62)
+        ) {
+            EmptyView()
+        }
+        .frame(width: 46, height: 46)
+        .padding(4)
+        .scaleEffect(isHovering ? 1.10 : 1)
+        .contentShape(Circle())
+        .help(item.name)
+        .onHover { hovering in
+            isHovering = hovering
+        }
+        .animation(.interpolatingSpring(stiffness: 210, damping: 20), value: isHovering)
+    }
+}
+
+private struct ImmersiveExitButtonStyle: ButtonStyle {
+    let colorScheme: ColorScheme
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(RadixPalette.mutedText(colorScheme))
+            .background(
+                Circle()
+                    .fill(RadixPalette.elementBackground(colorScheme).opacity(0.54))
+            )
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
