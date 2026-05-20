@@ -16,7 +16,7 @@ Countdown 是一个本地优先的 macOS SwiftUI 倒计时工具，用来追踪�
 ## 截图
 
 <p align="center">
-  <img src="Resources/screenshot-dashboard.png" alt="Countdown 主界面" width="45%">
+  <img src="Resources/dashboard.png" alt="Countdown 主界面" width="45%">
   <img src="Resources/screenshot-settings.png" alt="Countdown 设置界面" width="45%">
 </p>
 
