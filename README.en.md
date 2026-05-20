@@ -4,12 +4,12 @@ English | [简体中文](README.md)
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange)
-![Version](https://img.shields.io/badge/version-v0.9.4-green)
+![Version](https://img.shields.io/badge/version-v0.9.5-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 Countdown is a small local-first macOS SwiftUI app for tracking expiry dates, renewals, recurring reminders, and other time-sensitive items.
 
-Current version: `v0.9.4`
+Current version: `v0.9.5`
 
 [Download Latest Release](https://github.com/WhiteBalance2800K/countdown/releases)
 
@@ -37,7 +37,7 @@ Current version: `v0.9.4`
 - [x] Native light and dark mode support.
 - [x] Manual system, light, and dark appearance modes.
 - [x] Keep the main window above other windows when needed.
-- [x] Immersive mode with countdown rings only, hover details, and a draggable transparent window.
+- [x] Immersive mode with the three nearest items labeled and hover details for the rest.
 - [x] Language switcher with 10 app languages, plus GitHub and feedback shortcuts in Settings.
 - [x] Optional Bark push reminders.
 - [x] Menu bar entry with nearest due items and quick actions.
@@ -73,7 +73,7 @@ Countdown is useful for tracking:
 
 Download the latest app bundle from the [Releases](https://github.com/WhiteBalance2800K/countdown/releases) page.
 
-1. Download `Countdown-v0.9.4-macOS.zip`.
+1. Download `Countdown-v0.9.5-macOS.zip`.
 2. Unzip it.
 3. Move `Countdown.app` to `/Applications`.
 4. Open Countdown from Finder or Launchpad.
@@ -105,7 +105,7 @@ dist/Countdown.app
 The release archive is written to:
 
 ```text
-dist/Countdown-v0.9.4-macOS.zip
+dist/Countdown-v0.9.5-macOS.zip
 ```
 
 ## Bark Push Setup

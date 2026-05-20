@@ -2,6 +2,14 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9.5
+
+- Improved immersive mode so the three nearest expiry items always show their name and remaining days.
+- Replaced unreliable immersive-mode system tooltips with an in-window hover detail treatment for other rings.
+- Changed the Settings appearance switch to compact icon-only controls.
+- Simplified the Settings header to a centered title and moved the test push control below the Bark URL field.
+- Aligned the Data and Project Links action buttons evenly across the settings panel.
+
 ## v0.9.4
 
 - Fixed the Settings language row so the visible label is always `Language` and the appearance controls use normal compact sizing.

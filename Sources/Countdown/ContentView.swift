@@ -315,7 +315,7 @@ struct ContentView: View {
                 window.standardWindowButton(.zoomButton)?.isHidden = isImmersiveMode
 
                 let targetSize = isImmersiveMode
-                    ? NSSize(width: 260, height: min(max(150, displayItemsHeightEstimate), 420))
+                    ? NSSize(width: 320, height: min(max(190, displayItemsHeightEstimate), 520))
                     : NSSize(width: max(window.frame.width, 760), height: max(window.frame.height, 650))
                 resize(window: window, to: targetSize, animated: animated)
             }
@@ -324,7 +324,7 @@ struct ContentView: View {
 
     private var displayItemsHeightEstimate: CGFloat {
         let rows = ceil(Double(max(displayItems.count, 1)) / 3.0)
-        return CGFloat(rows) * 68 + 80
+        return CGFloat(rows) * 96 + 82
     }
 
     private func resize(window: NSWindow, to size: NSSize, animated: Bool) {
@@ -518,14 +518,19 @@ private struct ImmersiveDashboardView: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            LazyVGrid(columns: columns, spacing: 14) {
-                ForEach(items) { item in
-                    ImmersiveRingItem(item: item, now: now)
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(sortedItems) { item in
+                    ImmersiveRingItem(
+                        item: item,
+                        now: now,
+                        showsDetailsByDefault: featuredItemIDs.contains(item.id)
+                    )
                         .transition(.scale(scale: 0.72).combined(with: .opacity))
                 }
             }
             .padding(20)
-            .animation(.interpolatingSpring(stiffness: 190, damping: 24), value: items.map(\.id))
+            .padding(.top, 4)
+            .animation(.interpolatingSpring(stiffness: 190, damping: 24), value: sortedItems.map(\.id))
 
             Button(action: onExit) {
                 Image(systemName: "xmark.circle.fill")
@@ -540,7 +545,22 @@ private struct ImmersiveDashboardView: View {
     }
 
     private var columns: [GridItem] {
-        Array(repeating: GridItem(.fixed(54), spacing: 14), count: min(max(items.count, 1), 3))
+        Array(repeating: GridItem(.fixed(88), spacing: 10), count: min(max(items.count, 1), 3))
+    }
+
+    private var sortedItems: [CountdownItem] {
+        items.sorted { lhs, rhs in
+            let lhsDays = lhs.remainingDays(on: now)
+            let rhsDays = rhs.remainingDays(on: now)
+            if lhsDays != rhsDays {
+                return lhsDays < rhsDays
+            }
+            return lhs.expiryDate < rhs.expiryDate
+        }
+    }
+
+    private var featuredItemIDs: Set<UUID> {
+        Set(sortedItems.prefix(3).map(\.id))
     }
 }
 
@@ -551,6 +571,7 @@ private struct ImmersiveRingItem: View {
 
     let item: CountdownItem
     let now: Date
+    let showsDetailsByDefault: Bool
 
     private var remainingDays: Int {
         item.remainingDays(on: now)
@@ -571,27 +592,47 @@ private struct ImmersiveRingItem: View {
     }
 
     var body: some View {
-        RingView(
-            progress: progress,
-            color: urgency.color(colorScheme),
-            lineWidth: 7,
-            trackColor: RadixPalette.border(colorScheme).opacity(0.62)
-        ) {
-            EmptyView()
+        VStack(spacing: 6) {
+            RingView(
+                progress: progress,
+                color: urgency.color(colorScheme),
+                lineWidth: 7,
+                trackColor: RadixPalette.border(colorScheme).opacity(0.62)
+            ) {
+                EmptyView()
+            }
+            .frame(width: 46, height: 46)
+            .padding(4)
+            .scaleEffect(isHovering ? 1.08 : 1)
+
+            VStack(spacing: 1) {
+                Text(item.name)
+                    .font(.system(size: 10, weight: .semibold))
+                    .lineLimit(1)
+                Text(remainingText)
+                    .font(.system(size: 9, weight: .medium))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(RadixPalette.text(colorScheme))
+            .frame(width: 82, height: 27)
+            .padding(.horizontal, 4)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.54 : 0.72))
+            )
+            .opacity(showsDetailsByDefault || isHovering ? 1 : 0)
+            .scaleEffect(showsDetailsByDefault || isHovering ? 1 : 0.92)
         }
-        .frame(width: 46, height: 46)
-        .padding(4)
-        .scaleEffect(isHovering ? 1.10 : 1)
-        .contentShape(Circle())
-        .help(hoverText)
+        .frame(width: 88, height: 86)
+        .contentShape(Rectangle())
         .onHover { hovering in
             isHovering = hovering
         }
         .animation(.interpolatingSpring(stiffness: 210, damping: 20), value: isHovering)
     }
 
-    private var hoverText: String {
-        "\(item.name) · \(L10n.daysValue(remainingDays, AppLanguage.current(from: appLanguageRaw)))"
+    private var remainingText: String {
+        L10n.daysValue(remainingDays, AppLanguage.current(from: appLanguageRaw))
     }
 }
 

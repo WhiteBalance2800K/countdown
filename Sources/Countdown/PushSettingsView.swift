@@ -37,7 +37,6 @@ struct PushSettingsView: View {
                         reminderInfoSection
                         dataSection
                         projectSection
-                        testSection
                     }
                     .padding(18)
                 }
@@ -62,40 +61,27 @@ struct PushSettingsView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(RadixPalette.accentElement(colorScheme))
-                Image(systemName: "bell.badge.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(RadixPalette.accentSolid(colorScheme))
-            }
-            .frame(width: 38, height: 38)
+        ZStack {
+            Text(L10n.text("settings", language))
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(RadixPalette.text(colorScheme))
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.text("settings", language))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(RadixPalette.text(colorScheme))
-                Text(L10n.text("pushSubtitle", language))
-                    .font(.system(size: 12))
-                    .foregroundStyle(RadixPalette.mutedText(colorScheme))
-            }
+            HStack {
+                Spacer()
 
-            Spacer()
-
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .semibold))
-                    .frame(width: 28, height: 28)
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(SettingsIconButtonStyle(colorScheme: colorScheme))
+                .keyboardShortcut(.cancelAction)
             }
-            .buttonStyle(SettingsIconButtonStyle(colorScheme: colorScheme))
-            .keyboardShortcut(.cancelAction)
         }
         .padding(.horizontal, 18)
-        .padding(.top, 18)
-        .padding(.bottom, 14)
+        .padding(.vertical, 14)
         .background(RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.38 : 0.42))
         .overlay(alignment: .bottom) {
             Rectangle()
@@ -166,13 +152,16 @@ struct PushSettingsView: View {
 
             Picker("", selection: $appAppearanceModeRaw) {
                 ForEach(AppAppearanceMode.allCases) { option in
-                    Text(appearanceLabel(option)).tag(option.rawValue)
+                    Image(systemName: appearanceIcon(option))
+                        .accessibilityLabel(appearanceLabel(option))
+                        .tag(option.rawValue)
                 }
             }
             .labelsHidden()
             .pickerStyle(.segmented)
             .controlSize(.small)
-            .frame(width: 126)
+            .frame(width: 96)
+            .help(L10n.text("appearance", language))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
@@ -204,7 +193,30 @@ struct PushSettingsView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(RadixPalette.faintText(colorScheme))
                 .lineLimit(2)
+
+            testPushRow
         }
+    }
+
+    private var testPushRow: some View {
+        HStack(spacing: 10) {
+            Button {
+                sendTestPush()
+            } label: {
+                Label(L10n.text("testPush", language), systemImage: "paperplane.fill")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .buttonStyle(SettingsPrimaryButtonStyle(colorScheme: colorScheme))
+            .disabled(!canSendTest)
+
+            Text(testState.message(language))
+                .font(.system(size: 11))
+                .foregroundStyle(testState.color(colorScheme))
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 2)
     }
 
     private var reminderInfoSection: some View {
@@ -241,6 +253,7 @@ struct PushSettingsView: View {
                 } label: {
                     Label(V06Text.text("openDataFolder", language), systemImage: "folder")
                         .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
 
@@ -249,10 +262,9 @@ struct PushSettingsView: View {
                 } label: {
                     Label(V06Text.text("openBackupFolder", language), systemImage: "clock.arrow.circlepath")
                         .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
-
-                Spacer(minLength: 0)
             }
         }
     }
@@ -269,6 +281,7 @@ struct PushSettingsView: View {
                 } label: {
                     Label(L10n.text("openGitHub", language), systemImage: "chevron.left.forwardslash.chevron.right")
                         .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
 
@@ -277,31 +290,10 @@ struct PushSettingsView: View {
                 } label: {
                     Label(L10n.text("feedbackIssue", language), systemImage: "exclamationmark.bubble")
                         .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
-
-                Spacer(minLength: 0)
             }
-        }
-    }
-
-    private var testSection: some View {
-        HStack(spacing: 10) {
-            Button {
-                sendTestPush()
-            } label: {
-                Label(L10n.text("testPush", language), systemImage: "paperplane.fill")
-                    .font(.system(size: 12, weight: .semibold))
-            }
-            .buttonStyle(SettingsPrimaryButtonStyle(colorScheme: colorScheme))
-            .disabled(!canSendTest)
-
-            Text(testState.message(language))
-                .font(.system(size: 11))
-                .foregroundStyle(testState.color(colorScheme))
-                .lineLimit(1)
-
-            Spacer(minLength: 0)
         }
     }
 
@@ -372,6 +364,17 @@ struct PushSettingsView: View {
             return L10n.text("appearanceLight", language)
         case .dark:
             return L10n.text("appearanceDark", language)
+        }
+    }
+
+    private func appearanceIcon(_ mode: AppAppearanceMode) -> String {
+        switch mode {
+        case .system:
+            return "circle.lefthalf.filled"
+        case .light:
+            return "sun.max.fill"
+        case .dark:
+            return "moon.fill"
         }
     }
 
