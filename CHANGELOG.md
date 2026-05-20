@@ -2,6 +2,14 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9.2
+
+- Added manual appearance selection for system, light, and dark modes.
+- Added an always-on-top pin button beside the dashboard status and category filters.
+- Added a system sound preview to the custom Bark reminder row.
+- Changed the custom Bark reminder add control to an icon-only plus button.
+- Updated the README dashboard screenshot to the new light-mode image.
+
 ## v0.9.1
 
 - Replaced the Bark custom reminder calendar picker with plus, minus, and number input controls.

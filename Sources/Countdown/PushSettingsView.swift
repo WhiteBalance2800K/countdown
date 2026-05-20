@@ -10,6 +10,7 @@ struct PushSettingsView: View {
     @AppStorage("pushEnabled") private var pushEnabled: Bool = false
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
     @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
+    @AppStorage("appAppearanceMode") private var appAppearanceModeRaw: String = AppAppearanceMode.system.rawValue
     @AppStorage("launchAtLoginEnabled") private var launchAtLoginEnabled: Bool = false
 
     @State private var testState: TestState = .idle
@@ -30,6 +31,7 @@ struct PushSettingsView: View {
                 ScrollView {
                     VStack(spacing: 14) {
                         languageSection
+                        appearanceSection
                         launchAtLoginSection
                         toggleRow
                         addressField
@@ -166,6 +168,32 @@ struct PushSettingsView: View {
             .labelsHidden()
             .pickerStyle(.menu)
             .frame(width: 158)
+        }
+        .padding(12)
+        .background(settingsSurface)
+    }
+
+    private var appearanceSection: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.text("appearance", language))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(RadixPalette.text(colorScheme))
+                Text(L10n.text("appearanceHelp", language))
+                    .font(.system(size: 11))
+                    .foregroundStyle(RadixPalette.faintText(colorScheme))
+            }
+
+            Spacer()
+
+            Picker("", selection: $appAppearanceModeRaw) {
+                ForEach(AppAppearanceMode.allCases) { option in
+                    Text(appearanceLabel(option)).tag(option.rawValue)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            .frame(width: 178)
         }
         .padding(12)
         .background(settingsSurface)
@@ -354,6 +382,17 @@ struct PushSettingsView: View {
     private func openWeb(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
+    }
+
+    private func appearanceLabel(_ mode: AppAppearanceMode) -> String {
+        switch mode {
+        case .system:
+            return L10n.text("appearanceSystem", language)
+        case .light:
+            return L10n.text("appearanceLight", language)
+        case .dark:
+            return L10n.text("appearanceDark", language)
+        }
     }
 
     private func sendTestPush() {

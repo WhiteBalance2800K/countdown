@@ -4,9 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="Countdown"
 IDENTIFIER="com.example.countdown"
-APP_VERSION="0.9.1"
-BUNDLE_VERSION="10"
-RELEASE_TAG="v0.9.1"
+APP_VERSION="0.9.2"
+BUNDLE_VERSION="11"
+RELEASE_TAG="v0.9.2"
 
 cd "$ROOT_DIR"
 

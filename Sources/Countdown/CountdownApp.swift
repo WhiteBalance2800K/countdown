@@ -6,9 +6,14 @@ struct CountdownApp: App {
     @StateObject private var store = ItemsStore()
     @StateObject private var commandCenter = AppCommandCenter()
     @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
+    @AppStorage("appAppearanceMode") private var appAppearanceModeRaw: String = AppAppearanceMode.system.rawValue
 
     private var language: AppLanguage {
         AppLanguage.current(from: appLanguageRaw)
+    }
+
+    private var appearanceMode: AppAppearanceMode {
+        AppAppearanceMode.current(from: appAppearanceModeRaw)
     }
 
     var body: some Scene {
@@ -17,6 +22,7 @@ struct CountdownApp: App {
                 .environmentObject(store)
                 .environmentObject(commandCenter)
                 .environment(\.locale, Locale(identifier: language.localeIdentifier))
+                .preferredColorScheme(appearanceMode.colorScheme)
         }
         .windowStyle(.hiddenTitleBar)
 

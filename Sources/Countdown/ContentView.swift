@@ -11,6 +11,7 @@ struct ContentView: View {
     @AppStorage("pushEnabled") private var pushEnabled: Bool = false
     @AppStorage("barkPushAddress") private var barkPushAddress: String = "https://api.day.app/"
     @AppStorage("appLanguage") private var appLanguageRaw: String = AppLanguage.simplifiedChinese.rawValue
+    @AppStorage("isAlwaysOnTop") private var isAlwaysOnTop: Bool = false
 
     @State private var now = Date()
     @State private var isAdding = false
@@ -107,6 +108,7 @@ struct ContentView: View {
         }
         .frame(minWidth: 375, idealWidth: 760, minHeight: 500, idealHeight: 650)
         .onAppear {
+            updateWindowLevel()
             checkAndSendDuePushes()
         }
         .onChange(of: scenePhase) { newValue in
@@ -137,6 +139,9 @@ struct ContentView: View {
         }
         .onChange(of: barkPushAddress) { _ in
             checkAndSendDuePushes()
+        }
+        .onChange(of: isAlwaysOnTop) { _ in
+            updateWindowLevel()
         }
         .sheet(isPresented: $isAdding) {
             ItemEditorView(mode: .add, initialItem: nil, categorySuggestions: categoryOptions) { result in
@@ -217,13 +222,32 @@ struct ContentView: View {
             .labelsHidden()
             .pickerStyle(.menu)
             .frame(width: 150)
+
+            Button {
+                isAlwaysOnTop.toggle()
+                updateWindowLevel()
+            } label: {
+                Image(systemName: isAlwaysOnTop ? "pin.fill" : "pin")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 34, height: 34)
+            }
+            .buttonStyle(PinFilterButtonStyle(colorScheme: colorScheme, isSelected: isAlwaysOnTop))
+            .help(L10n.text("pinOnTop", language))
         }
-        .frame(maxWidth: 310)
+        .frame(maxWidth: 354)
         .onChange(of: categoryOptions) { options in
             if categoryFilter != Self.allCategoriesFilterValue,
                categoryFilter != Self.uncategorizedFilterValue,
                !options.contains(categoryFilter) {
                 categoryFilter = Self.allCategoriesFilterValue
+            }
+        }
+    }
+
+    private func updateWindowLevel() {
+        DispatchQueue.main.async {
+            for window in NSApp.windows {
+                window.level = isAlwaysOnTop ? .floating : .normal
             }
         }
     }
@@ -357,4 +381,31 @@ struct ContentView: View {
 
     private static let allCategoriesFilterValue = "__all_categories__"
     private static let uncategorizedFilterValue = "__uncategorized__"
+}
+
+private struct PinFilterButtonStyle: ButtonStyle {
+    let colorScheme: ColorScheme
+    let isSelected: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(isSelected ? Color.white : RadixPalette.mutedText(colorScheme))
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(fill(configuration: configuration))
+            )
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.14), value: isSelected)
+    }
+
+    private func fill(configuration: Configuration) -> Color {
+        if isSelected {
+            return RadixPalette.accentSolid(colorScheme)
+        }
+        if configuration.isPressed {
+            return RadixPalette.hoverBackground(colorScheme)
+        }
+        return RadixPalette.elementBackground(colorScheme).opacity(colorScheme == .dark ? 0.62 : 0.76)
+    }
 }

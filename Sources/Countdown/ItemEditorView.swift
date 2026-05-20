@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ItemEditorView: View {
@@ -408,6 +409,12 @@ struct ItemEditorView: View {
                 Image(systemName: "bell.and.waves.left.and.right")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(RadixPalette.accentSolid(colorScheme))
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        playReminderSound()
+                    }
+                    .help(L10n.text("reminderSoundPreview", language))
 
                 dayAdjustButton(systemName: "minus", action: { customReminderDays = clampDays(customReminderDays - 1) })
 
@@ -432,10 +439,12 @@ struct ItemEditorView: View {
                 Button {
                     addCustomReminderDays()
                 } label: {
-                    Label(L10n.text("reminderAddDate", language), systemImage: "plus")
+                    Image(systemName: "plus")
                         .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 28, height: 28)
                 }
                 .buttonStyle(CompactActionButtonStyle(colorScheme: colorScheme))
+                .help(L10n.text("reminderAddDate", language))
             }
             .padding(.horizontal, 12)
             .frame(height: 42)
@@ -648,6 +657,14 @@ struct ItemEditorView: View {
 
     private func addCustomReminderDays() {
         reminderOffsets.insert(clampDays(customReminderDays))
+    }
+
+    private func playReminderSound() {
+        if let sound = NSSound(named: "Glass") ?? NSSound(named: "Ping") {
+            sound.play()
+        } else {
+            NSSound.beep()
+        }
     }
 
     private func text(_ key: String) -> String {
