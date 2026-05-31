@@ -4,12 +4,12 @@ English | [简体中文](README.md)
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange)
-![Version](https://img.shields.io/badge/version-v0.9.5-green)
+![Version](https://img.shields.io/badge/version-v0.9.6-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 Countdown is a small local-first macOS SwiftUI app for tracking expiry dates, renewals, recurring reminders, and other time-sensitive items.
 
-Current version: `v0.9.5`
+Current version: `v0.9.6`
 
 [Download Latest Release](https://github.com/WhiteBalance2800K/countdown/releases)
 
@@ -23,7 +23,7 @@ Current version: `v0.9.5`
 ## Features
 
 - [x] Track expiry dates, renewals, deadlines, and recurring items.
-- [x] Add, edit, archive, restore, and delete countdown items.
+- [x] Add, edit, archive, and restore countdown items.
 - [x] Enter an expiry date directly or by remaining days.
 - [x] Add notes, category presets, and custom categories to each countdown item.
 - [x] Pick Bark reminder dates with quick choices, plus/minus controls, or number input.
@@ -31,6 +31,7 @@ Current version: `v0.9.5`
 - [x] Renew recurring countdown items with one click.
 - [x] Filter by active, all, 30-day, overdue, archived, and category.
 - [x] Archive completed items without deleting them.
+- [x] Expired items leave Active automatically and appear in Overdue.
 - [x] Compact card layout with color-coded ring progress.
 - [x] Manual drag ordering with arrange mode.
 - [x] One-click ordering by nearest or farthest expiry date.
@@ -73,7 +74,7 @@ Countdown is useful for tracking:
 
 Download the latest app bundle from the [Releases](https://github.com/WhiteBalance2800K/countdown/releases) page.
 
-1. Download `Countdown-v0.9.5-macOS.zip`.
+1. Download `Countdown-v0.9.6-macOS.zip`.
 2. Unzip it.
 3. Move `Countdown.app` to `/Applications`.
 4. Open Countdown from Finder or Launchpad.
@@ -105,7 +106,7 @@ dist/Countdown.app
 The release archive is written to:
 
 ```text
-dist/Countdown-v0.9.5-macOS.zip
+dist/Countdown-v0.9.6-macOS.zip
 ```
 
 ## Bark Push Setup

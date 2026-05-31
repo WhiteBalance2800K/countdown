@@ -89,7 +89,7 @@ enum L10n {
     private static let strings: [AppLanguage: [String: String]] = [
         .simplifiedChinese: [
             "cards": "卡片", "adjust": "调整", "done": "完成", "near": "临近", "far": "较远", "settings": "设置",
-            "addHelp": "新增", "edit": "编辑", "delete": "删除", "itemName": "项目名称", "itemPlaceholder": "例如：会员续费、证件到期",
+            "addHelp": "新增", "edit": "编辑", "delete": "删除", "archive": "归档", "itemName": "项目名称", "itemPlaceholder": "例如：会员续费、证件到期",
             "daysMode": "天数", "dateMode": "日期", "remainingDays": "剩余天数", "expiryDate": "到期日期", "due": "到期", "remaining": "剩余",
             "today": "今天", "cancel": "取消", "add": "添加", "save": "保存", "note": "备注", "noItems": "还没有项目", "emptyHint": "点击加号添加第一个到期项目。",
             "filterActive": "进行中", "filterAll": "全部", "filterWithin30": "30 天内", "filterOverdue": "已过期", "filterArchived": "归档",
@@ -115,7 +115,7 @@ enum L10n {
         ],
         .english: [
             "cards": "Cards", "adjust": "Arrange", "done": "Done", "near": "Soon", "far": "Later", "settings": "Settings",
-            "addHelp": "Add", "edit": "Edit", "delete": "Delete", "itemName": "Item name", "itemPlaceholder": "e.g. membership, document renewal",
+            "addHelp": "Add", "edit": "Edit", "delete": "Delete", "archive": "Archive", "itemName": "Item name", "itemPlaceholder": "e.g. membership, document renewal",
             "daysMode": "Days", "dateMode": "Date", "remainingDays": "Days remaining", "expiryDate": "Expiry date", "due": "Due", "remaining": "Left",
             "today": "Today", "cancel": "Cancel", "add": "Add", "save": "Save", "note": "Note", "noItems": "No items yet", "emptyHint": "Use the plus button to add your first expiry date.",
             "filterActive": "Active", "filterAll": "All", "filterWithin30": "30 days", "filterOverdue": "Overdue", "filterArchived": "Archived",

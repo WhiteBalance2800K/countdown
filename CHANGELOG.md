@@ -2,6 +2,13 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9.6
+
+- Fixed active dashboard filtering so expired items move out of "Active" and into "Overdue" automatically.
+- Stopped expired cards from continuing to count upward after the due date.
+- Reduced always-on-top pin flicker by limiting the pin action to main-window level changes.
+- Changed the card delete action into an archive action so items move to Archived instead of being removed.
+
 ## v0.9.5
 
 - Improved immersive mode so the three nearest expiry items always show their name and remaining days.

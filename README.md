@@ -4,12 +4,12 @@
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange)
-![Version](https://img.shields.io/badge/version-v0.9.5-green)
+![Version](https://img.shields.io/badge/version-v0.9.6-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 Countdown 是一个本地优先的 macOS SwiftUI 倒计时工具，用来追踪到期日、续费日、重复提醒和其他需要提前关注的时间节点。
 
-当前版本：`v0.9.5`
+当前版本：`v0.9.6`
 
 [下载最新版本](https://github.com/WhiteBalance2800K/countdown/releases)
 
@@ -23,7 +23,7 @@ Countdown 是一个本地优先的 macOS SwiftUI 倒计时工具，用来追踪�
 ## 功能特性
 
 - [x] 追踪到期日、续费日、deadline 和周期性事项。
-- [x] 新增、编辑、归档、恢复和删除倒计时项目。
+- [x] 新增、编辑、归档和恢复倒计时项目。
 - [x] 支持直接选择到期日期，也支持按剩余天数录入。
 - [x] 每个倒计时项目支持备注、分类预设和自定义分类。
 - [x] 支持用快捷按钮、加减按钮或数字输入设置 Bark 提醒日期。
@@ -31,6 +31,7 @@ Countdown 是一个本地优先的 macOS SwiftUI 倒计时工具，用来追踪�
 - [x] 支持一键续期周期性项目。
 - [x] 支持按活跃、全部、30 天内、已过期、已归档和分类筛选。
 - [x] 支持归档已完成项目，不必直接删除。
+- [x] 过期项目会自动离开“进行中”，进入“已过期”视图。
 - [x] 紧凑卡片布局，使用圆环和颜色表达紧迫程度。
 - [x] 支持手动拖拽排序，并提供轻量调整模式。
 - [x] 支持一键按临近或较远到期日排序。
@@ -73,7 +74,7 @@ Countdown 适合追踪：
 
 从 [Releases](https://github.com/WhiteBalance2800K/countdown/releases) 页面下载最新版本。
 
-1. 下载 `Countdown-v0.9.5-macOS.zip`。
+1. 下载 `Countdown-v0.9.6-macOS.zip`。
 2. 解压文件。
 3. 将 `Countdown.app` 移动到“应用程序”文件夹。
 4. 从 Finder 或启动台打开 Countdown。
@@ -105,7 +106,7 @@ dist/Countdown.app
 Release 压缩包位于：
 
 ```text
-dist/Countdown-v0.9.5-macOS.zip
+dist/Countdown-v0.9.6-macOS.zip
 ```
 
 ## Bark 推送设置

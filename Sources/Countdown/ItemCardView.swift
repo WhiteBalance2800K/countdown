@@ -6,7 +6,7 @@ struct ItemCardView: View {
     let item: CountdownItem
     let now: Date
     let onEdit: () -> Void
-    let onDelete: () -> Void
+    let onArchive: () -> Void
 
     private var remainingDays: Int { item.remainingDays(on: now) }
 
@@ -34,9 +34,9 @@ struct ItemCardView: View {
             HStack(spacing: 14) {
                 RingView(progress: progress, color: ringColor) {
                     VStack(spacing: 2) {
-                        Text("\(abs(remainingDays))")
+                        Text(displayNumber)
                             .font(.system(size: 24, weight: .semibold, design: .rounded))
-                        Text(remainingDays < 0 ? L10n.text("due", language) : L10n.text("daysMode", language))
+                        Text(remainingDays < 0 ? L10n.text("filterOverdue", language) : L10n.text("daysMode", language))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
@@ -71,7 +71,11 @@ struct ItemCardView: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button(L10n.text("edit", language)) { onEdit() }
-            Button(L10n.text("delete", language), role: .destructive) { onDelete() }
+            Button(L10n.text("archive", language)) { onArchive() }
         }
+    }
+
+    private var displayNumber: String {
+        remainingDays < 0 ? "0" : "\(remainingDays)"
     }
 }

@@ -93,7 +93,7 @@ struct SoftDashboardView: View {
     let store: ItemsStore
     @Binding var draggingItemID: UUID?
     let onEdit: (CountdownItem) -> Void
-    let onDelete: (CountdownItem) -> Void
+    let onArchive: (CountdownItem) -> Void
 
     var body: some View {
         GeometryReader { proxy in
@@ -115,7 +115,7 @@ struct SoftDashboardView: View {
                                     now: now,
                                     showsDragHandle: isManualOrder,
                                     onEdit: { onEdit(item) },
-                                    onDelete: { onDelete(item) }
+                                    onArchive: { onArchive(item) }
                                 )
                                 .modifier(ManualReorderModifier(
                                     enabled: isManualOrder,
@@ -154,7 +154,7 @@ private struct SoftMetricCard: View {
     let now: Date
     let showsDragHandle: Bool
     let onEdit: () -> Void
-    let onDelete: () -> Void
+    let onArchive: () -> Void
 
     @State private var isHovering = false
 
@@ -263,14 +263,14 @@ private struct SoftMetricCard: View {
                     .buttonStyle(.plain)
                     .help(L10n.text("edit", language))
 
-                    Button(role: .destructive) {
-                        onDelete()
+                    Button {
+                        onArchive()
                     } label: {
-                        Image(systemName: "trash")
+                        Image(systemName: "archivebox")
                             .frame(width: 22, height: 22)
                     }
                     .buttonStyle(.plain)
-                    .help(L10n.text("delete", language))
+                    .help(L10n.text("archive", language))
                 }
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(secondaryText)
@@ -355,7 +355,7 @@ private struct SoftMetricCard: View {
 
     private var primaryNumber: String {
         if remainingDays < 0 {
-            return "\(abs(remainingDays))"
+            return L10n.text("filterOverdue", language)
         }
         return "\(remainingDays)"
     }

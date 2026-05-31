@@ -61,7 +61,7 @@ struct ContentView: View {
             let days = item.remainingDays(on: now)
             switch filter {
             case .active:
-                return !item.isArchived
+                return !item.isArchived && days >= 0
             case .all:
                 return true
             case .within30:
@@ -110,7 +110,7 @@ struct ContentView: View {
                 checkAndSendDuePushes()
             }
         }
-        .onReceive(Timer.publish(every: 3600, on: .main, in: .common).autoconnect()) { _ in
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
             now = Date()
             checkAndSendDuePushes()
         }
@@ -134,7 +134,7 @@ struct ContentView: View {
             checkAndSendDuePushes()
         }
         .onChange(of: isAlwaysOnTop) { _ in
-            updateWindowPresentation()
+            updateWindowLevel()
         }
         .onChange(of: isImmersiveMode) { _ in
             updateWindowPresentation()
@@ -209,7 +209,7 @@ struct ContentView: View {
                     store: store,
                     draggingItemID: $draggingItemID,
                     onEdit: { editingItem = $0 },
-                    onDelete: { store.remove($0) }
+                    onArchive: { store.archive($0) }
                 )
             }
 
@@ -253,7 +253,6 @@ struct ContentView: View {
 
             Button {
                 isAlwaysOnTop.toggle()
-                updateWindowPresentation()
             } label: {
                 Image(systemName: isAlwaysOnTop ? "pin.fill" : "pin")
                     .font(.system(size: 13, weight: .semibold))
@@ -302,8 +301,7 @@ struct ContentView: View {
 
     private func updateWindowPresentation(animated: Bool = true) {
         DispatchQueue.main.async {
-            for window in NSApp.windows {
-                guard window.sheetParent == nil else { continue }
+            for window in managedWindows {
                 window.level = isAlwaysOnTop ? .floating : .normal
                 window.isOpaque = !isImmersiveMode
                 window.backgroundColor = isImmersiveMode ? .clear : .windowBackgroundColor
@@ -319,6 +317,20 @@ struct ContentView: View {
                     : NSSize(width: max(window.frame.width, 760), height: max(window.frame.height, 650))
                 resize(window: window, to: targetSize, animated: animated)
             }
+        }
+    }
+
+    private func updateWindowLevel() {
+        DispatchQueue.main.async {
+            for window in managedWindows {
+                window.level = isAlwaysOnTop ? .floating : .normal
+            }
+        }
+    }
+
+    private var managedWindows: [NSWindow] {
+        NSApp.windows.filter { window in
+            window.sheetParent == nil && window.canBecomeMain
         }
     }
 
