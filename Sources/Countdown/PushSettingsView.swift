@@ -1,6 +1,7 @@
 import AppKit
 import ServiceManagement
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct PushSettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -15,6 +16,8 @@ struct PushSettingsView: View {
 
     @State private var testState: TestState = .idle
     @State private var launchAtLoginError = false
+    @State private var dataTransferMessage: String?
+    @State private var dataTransferIsError = false
 
     private var language: AppLanguage {
         AppLanguage.current(from: appLanguageRaw)
@@ -266,6 +269,53 @@ struct PushSettingsView: View {
                 }
                 .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
             }
+
+            HStack(spacing: 10) {
+                Button {
+                    importData(format: .json)
+                } label: {
+                    Label(L10n.text("importJSON", language), systemImage: "square.and.arrow.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+
+                Button {
+                    importData(format: .csv)
+                } label: {
+                    Label(L10n.text("importCSV", language), systemImage: "square.and.arrow.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+            }
+
+            HStack(spacing: 10) {
+                Button {
+                    exportData(format: .json)
+                } label: {
+                    Label(L10n.text("exportJSON", language), systemImage: "square.and.arrow.up")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+
+                Button {
+                    exportData(format: .csv)
+                } label: {
+                    Label(L10n.text("exportCSV", language), systemImage: "square.and.arrow.up")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(SettingsSecondaryButtonStyle(colorScheme: colorScheme))
+            }
+
+            if let dataTransferMessage {
+                Text(dataTransferMessage)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(dataTransferIsError ? RadixPalette.dangerSolid(colorScheme) : RadixPalette.successSolid(colorScheme))
+                    .lineLimit(2)
+            }
         }
     }
 
@@ -354,6 +404,62 @@ struct PushSettingsView: View {
     private func openWeb(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
+    }
+
+    private func importData(format: CountdownDataFileFormat) {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [contentType(for: format)]
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            let count = try store.importData(from: url, format: format)
+            dataTransferIsError = false
+            dataTransferMessage = String(format: L10n.text("dataImportSuccess", language), count)
+        } catch {
+            dataTransferIsError = true
+            dataTransferMessage = L10n.text("dataTransferFailed", language)
+        }
+    }
+
+    private func exportData(format: CountdownDataFileFormat) {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [contentType(for: format)]
+        panel.nameFieldStringValue = "Countdown-\(Self.filenameDate()).\(format.fileExtension)"
+
+        guard panel.runModal() == .OK, var url = panel.url else { return }
+        if url.pathExtension.isEmpty {
+            url.appendPathExtension(format.fileExtension)
+        }
+
+        do {
+            let data = try store.exportData(format: format)
+            try data.write(to: url, options: [.atomic])
+            dataTransferIsError = false
+            dataTransferMessage = String(format: L10n.text("dataExportSuccess", language), format.fileExtension.uppercased())
+        } catch {
+            dataTransferIsError = true
+            dataTransferMessage = L10n.text("dataTransferFailed", language)
+        }
+    }
+
+    private func contentType(for format: CountdownDataFileFormat) -> UTType {
+        switch format {
+        case .json:
+            return .json
+        case .csv:
+            return .commaSeparatedText
+        }
+    }
+
+    private static func filenameDate() -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd"
+        return formatter.string(from: Date())
     }
 
     private func appearanceLabel(_ mode: AppAppearanceMode) -> String {

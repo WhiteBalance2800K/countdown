@@ -2,6 +2,14 @@
 
 All notable changes to Countdown are documented in this file.
 
+## v0.9.7
+
+- Added JSON export and import for full-fidelity Countdown backups and migration.
+- Added CSV export and import for spreadsheet-friendly batch maintenance.
+- Added import/export controls to the Settings Data section with inline success/failure feedback.
+- Added a hover-only created-date detail beside each card expiry date.
+- Simplified the card hover ring into a subtle time-flow sweep and stopped it for expired cards.
+
 ## v0.9.6
 
 - Fixed active dashboard filtering so expired items move out of "Active" and into "Overdue" automatically.

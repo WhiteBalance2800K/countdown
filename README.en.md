@@ -4,12 +4,12 @@ English | [简体中文](README.md)
 
 ![Platform](https://img.shields.io/badge/platform-macOS-lightgrey)
 ![Swift](https://img.shields.io/badge/Swift-6.2-orange)
-![Version](https://img.shields.io/badge/version-v0.9.6-green)
+![Version](https://img.shields.io/badge/version-v0.9.7-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 Countdown is a small local-first macOS SwiftUI app for tracking expiry dates, renewals, recurring reminders, and other time-sensitive items.
 
-Current version: `v0.9.6`
+Current version: `v0.9.7`
 
 [Download Latest Release](https://github.com/WhiteBalance2800K/countdown/releases)
 
@@ -43,6 +43,7 @@ Current version: `v0.9.6`
 - [x] Optional Bark push reminders.
 - [x] Menu bar entry with nearest due items and quick actions.
 - [x] Optional launch at login.
+- [x] Import and export JSON and CSV files for backup, migration, and batch maintenance.
 - [x] Local-first persistence with no account required.
 
 ## Use Cases
@@ -61,7 +62,6 @@ Countdown is useful for tracking:
 
 - [ ] Add native macOS notifications as an alternative to Bark push.
 - [ ] Add iCloud sync or optional file-based sync for users with multiple Macs.
-- [ ] Add import and export support for JSON or CSV files.
 - [ ] Add calendar export support, such as `.ics` files.
 - [ ] Add more dashboard views, such as grouped-by-category and timeline views.
 - [ ] Add smarter recurring rules, such as every N months or custom weekdays.
@@ -74,7 +74,7 @@ Countdown is useful for tracking:
 
 Download the latest app bundle from the [Releases](https://github.com/WhiteBalance2800K/countdown/releases) page.
 
-1. Download `Countdown-v0.9.6-macOS.zip`.
+1. Download `Countdown-v0.9.7-macOS.zip`.
 2. Unzip it.
 3. Move `Countdown.app` to `/Applications`.
 4. Open Countdown from Finder or Launchpad.
@@ -106,7 +106,7 @@ dist/Countdown.app
 The release archive is written to:
 
 ```text
-dist/Countdown-v0.9.6-macOS.zip
+dist/Countdown-v0.9.7-macOS.zip
 ```
 
 ## Bark Push Setup

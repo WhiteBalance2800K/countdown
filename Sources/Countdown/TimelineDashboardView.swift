@@ -220,29 +220,43 @@ private struct SoftMetricCard: View {
 
                     Spacer(minLength: 4)
 
-                    RingView(
-                        progress: progress,
-                        color: urgency.color(colorScheme),
-                        lineWidth: 7,
-                        trackColor: ringTrackColor
-                    ) {
-                        EmptyView()
-                    }
-                    .frame(width: 46, height: 46)
-                    .overlay {
-                        if isHovering {
-                            RingParticleEffect(color: urgency.color(colorScheme))
+                    ZStack {
+                        if isHovering, showsRingTimeFlow {
+                            RingTimeFlowEffect(color: urgency.color(colorScheme))
                                 .frame(width: 62, height: 62)
                                 .transition(.opacity)
                         }
+
+                        RingView(
+                            progress: progress,
+                            color: urgency.color(colorScheme),
+                            lineWidth: 7,
+                            trackColor: ringTrackColor
+                        ) {
+                            EmptyView()
+                        }
+                        .frame(width: 46, height: 46)
+                        .scaleEffect(isHovering && showsRingTimeFlow ? 1.04 : 1)
                     }
+                    .frame(width: 66, height: 66)
                     .animation(.easeOut(duration: 0.18), value: isHovering)
                 }
 
-                Text(DateFormatters.shortDateString(from: item.expiryDate, language: language))
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(secondaryText)
-                    .padding(.top, 8)
+                HStack(spacing: 8) {
+                    Text(DateFormatters.shortDateString(from: item.expiryDate, language: language))
+                        .lineLimit(1)
+
+                    Spacer(minLength: 6)
+
+                    Text(startedAtText)
+                        .lineLimit(1)
+                        .opacity(isHovering ? 0.62 : 0)
+                        .offset(x: isHovering ? 0 : 8)
+                        .animation(.easeOut(duration: 0.18), value: isHovering)
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(secondaryText)
+                .padding(.top, 8)
             }
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: 138, alignment: .leading)
@@ -360,6 +374,40 @@ private struct SoftMetricCard: View {
         return "\(remainingDays)"
     }
 
+    private var startedAtText: String {
+        "\(L10n.text("startedAt", language)) \(DateFormatters.shortDateString(from: item.createdAt, language: language))"
+    }
+
+    private var showsRingTimeFlow: Bool {
+        remainingDays >= 0
+    }
+
+}
+
+private struct RingTimeFlowEffect: View {
+    let color: Color
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            let time = timeline.date.timeIntervalSinceReferenceDate
+            let rotation = Angle.degrees(time.truncatingRemainder(dividingBy: 3.6) / 3.6 * 360)
+
+            ZStack {
+                Circle()
+                    .stroke(color.opacity(0.16), lineWidth: 1)
+
+                Circle()
+                    .trim(from: 0.02, to: 0.24)
+                    .stroke(
+                        color.opacity(0.72),
+                        style: StrokeStyle(lineWidth: 1.8, lineCap: .round)
+                    )
+                    .rotationEffect(rotation)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
 }
 
 private struct SoftBottomBar: View {

@@ -147,6 +147,40 @@ final class ItemsStore: ObservableObject {
         }
     }
 
+    func exportData(format: CountdownDataFileFormat) throws -> Data {
+        switch format {
+        case .json:
+            return try encoder.encode(items)
+        case .csv:
+            return Self.csvData(for: items)
+        }
+    }
+
+    func importData(from url: URL, format: CountdownDataFileFormat) throws -> Int {
+        let importedItems: [CountdownItem]
+
+        switch format {
+        case .json:
+            let data = try Data(contentsOf: url)
+            importedItems = try decoder.decode([CountdownItem].self, from: data)
+        case .csv:
+            let text = try String(contentsOf: url, encoding: .utf8)
+            importedItems = try Self.items(fromCSV: text)
+        }
+
+        for item in importedItems {
+            let normalized = item.normalizedExpiryDate()
+            if let index = items.firstIndex(where: { $0.id == normalized.id }) {
+                items[index] = normalized
+            } else {
+                items.append(normalized)
+            }
+        }
+
+        saveToDisk()
+        return importedItems.count
+    }
+
     func appSupportDirectoryURL() -> URL {
         ensureDirExists()
         return appSupportDir()
@@ -312,6 +346,198 @@ final class ItemsStore: ObservableObject {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyyMMdd-HHmmss"
         return formatter.string(from: Date())
+    }
+
+    private static let csvColumns = [
+        "id",
+        "name",
+        "expiryDate",
+        "createdAt",
+        "updatedAt",
+        "note",
+        "reminderOffsets",
+        "category",
+        "link",
+        "isArchived",
+        "repeatRule",
+        "repeatCustomDays",
+    ]
+
+    private static func csvData(for items: [CountdownItem]) -> Data {
+        let formatter = ISO8601DateFormatter()
+        let rows = items.map { item in
+            [
+                item.id.uuidString,
+                item.name,
+                formatter.string(from: item.expiryDate),
+                formatter.string(from: item.createdAt),
+                formatter.string(from: item.updatedAt),
+                item.note,
+                item.reminderOffsets.map(String.init).joined(separator: ";"),
+                item.category,
+                item.link,
+                item.isArchived ? "true" : "false",
+                item.repeatRule.rawValue,
+                "\(item.repeatCustomDays)",
+            ].map(Self.csvEscaped)
+                .joined(separator: ",")
+        }
+
+        let csv = ([csvColumns.joined(separator: ",")] + rows).joined(separator: "\n") + "\n"
+        return Data(csv.utf8)
+    }
+
+    private static func items(fromCSV text: String) throws -> [CountdownItem] {
+        let rows = parseCSV(text)
+            .filter { row in
+                row.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            }
+        guard let header = rows.first else { return [] }
+
+        let keys = header.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let dataRows = rows.dropFirst()
+
+        return try dataRows.enumerated().map { offset, row in
+            func value(_ key: String) -> String {
+                guard let index = keys.firstIndex(of: key), index < row.count else { return "" }
+                return row[index].trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
+            let name = value("name")
+            guard !name.isEmpty, let expiryDate = parseDate(value("expiryDate")) else {
+                throw CountdownDataTransferError.invalidCSVRow(offset + 2)
+            }
+
+            let id = UUID(uuidString: value("id")) ?? UUID()
+            let createdAt = parseDate(value("createdAt")) ?? Date()
+            let updatedAt = parseDate(value("updatedAt")) ?? Date()
+            let reminderOffsets = value("reminderOffsets")
+                .split(separator: ";")
+                .compactMap { Int($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            let repeatRule = RepeatRule(rawValue: value("repeatRule")) ?? .none
+            let repeatCustomDays = Int(value("repeatCustomDays")) ?? 30
+
+            return CountdownItem(
+                id: id,
+                name: name,
+                expiryDate: expiryDate,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                note: value("note"),
+                reminderOffsets: reminderOffsets,
+                category: value("category"),
+                link: value("link"),
+                isArchived: parseBool(value("isArchived")),
+                repeatRule: repeatRule,
+                repeatCustomDays: repeatCustomDays
+            )
+        }
+    }
+
+    private static func csvEscaped(_ value: String) -> String {
+        let escaped = value.replacingOccurrences(of: "\"", with: "\"\"")
+        if escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n") || escaped.contains("\r") {
+            return "\"\(escaped)\""
+        }
+        return escaped
+    }
+
+    private static func parseCSV(_ text: String) -> [[String]] {
+        var rows: [[String]] = []
+        var row: [String] = []
+        var field = ""
+        var isQuoted = false
+        var index = text.startIndex
+
+        while index < text.endIndex {
+            let character = text[index]
+
+            if isQuoted {
+                if character == "\"" {
+                    let nextIndex = text.index(after: index)
+                    if nextIndex < text.endIndex, text[nextIndex] == "\"" {
+                        field.append("\"")
+                        index = nextIndex
+                    } else {
+                        isQuoted = false
+                    }
+                } else {
+                    field.append(character)
+                }
+            } else {
+                switch character {
+                case "\"":
+                    isQuoted = true
+                case ",":
+                    row.append(field)
+                    field = ""
+                case "\n":
+                    row.append(field)
+                    rows.append(row)
+                    row = []
+                    field = ""
+                case "\r":
+                    break
+                default:
+                    field.append(character)
+                }
+            }
+
+            index = text.index(after: index)
+        }
+
+        if !field.isEmpty || !row.isEmpty {
+            row.append(field)
+            rows.append(row)
+        }
+
+        return rows
+    }
+
+    private static func parseDate(_ value: String) -> Date? {
+        guard !value.isEmpty else { return nil }
+
+        let isoFormatter = ISO8601DateFormatter()
+        if let date = isoFormatter.date(from: value) {
+            return date
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = .current
+
+        for format in ["yyyy-MM-dd", "yyyy/M/d", "yyyy年M月d日"] {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: value) {
+                return date
+            }
+        }
+
+        return nil
+    }
+
+    private static func parseBool(_ value: String) -> Bool {
+        let normalized = value.lowercased()
+        return normalized == "true" || normalized == "1" || normalized == "yes"
+    }
+}
+
+enum CountdownDataFileFormat: String {
+    case json
+    case csv
+
+    var fileExtension: String { rawValue }
+}
+
+enum CountdownDataTransferError: LocalizedError {
+    case invalidCSVRow(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidCSVRow(let row):
+            return "Invalid CSV row: \(row)"
+        }
     }
 }
 
